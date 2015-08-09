@@ -15,8 +15,9 @@ libraryDependencies += "biz.enef" %%% "slogging" % "0.3"
 
 libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.3.4"
 
+libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0"
 
-//jsDependencies += "org.webjars" % "angularjs" % "1.4.3" / "angular.min.js"
+jsDependencies += ProvidedJS / "rAF.js"
 
 
 //jsDependencies += "org.webjars" % "angularjs" % "1.4.3" / "angular.min.js"
