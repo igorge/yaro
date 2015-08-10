@@ -10,6 +10,9 @@ object WebGLContext extends Constants {
   final val CURRENT_PROGRAM: Int = dom.raw.WebGLRenderingContext.CURRENT_PROGRAM
   final val VERTEX_SHADER: Int = dom.raw.WebGLRenderingContext.VERTEX_SHADER
   final val FRAGMENT_SHADER: Int = dom.raw.WebGLRenderingContext.FRAGMENT_SHADER
+  final val SHADER_TYPE: Int = dom.raw.WebGLRenderingContext.SHADER_TYPE
+  final val DELETE_STATUS: Int = dom.raw.WebGLRenderingContext.DELETE_STATUS
+  final val COMPILE_STATUS: Int = dom.raw.WebGLRenderingContext.COMPILE_STATUS
 }
 
 class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
@@ -19,17 +22,25 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   final type Buffer = dom.raw.WebGLBuffer
   final type UniformLocation = dom.raw.WebGLUniformLocation
 
-  implicit final val programNullable: Nullable[Program] = new Object with Nullable[Program] {
+  implicit final val programNullable: ResourceHandle[Program] = new Object with ResourceHandle[Program] {
     @inline final def isNull(x: Program): Boolean = x eq null
     @inline final def nullValue: Program = null
+    @inline final def create(): Program = createProgram()
+    @inline final def free(x: Program): Unit= { assume(! isNull(x) ); deleteProgram(x)  }
   }
-  implicit final val shaderNullable: Nullable[Shader] = new Object with Nullable[Shader] {
+  implicit final val shaderNullable: ResourceHandle[Shader] = new Object with ResourceHandle[Shader] {
     @inline final def isNull(x: Shader): Boolean = x eq null
     @inline final def nullValue: Shader = null
+    @inline final def create(): Shader = throw new UnsupportedOperationException()
+    @inline final def free(x: Shader): Unit= { assume(! isNull(x) ); deleteShader(x)  }
   }
-  implicit final val uniformLocationNullable: Nullable[UniformLocation] = new Object with Nullable[UniformLocation] {
+
+  // not a resource but define for null values
+  implicit final val uniformLocationNullable: ResourceHandle[UniformLocation] = new Object with ResourceHandle[UniformLocation] {
     @inline final def isNull(x: UniformLocation): Boolean = x eq null
     @inline final def nullValue: UniformLocation = null
+    @inline final def create(): UniformLocation = throw new UnsupportedOperationException()
+    @inline final def free(x: UniformLocation): Unit= {}
   }
 
   // ctor
@@ -47,7 +58,6 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
 
   @inline final def currentProgram(): Program = real.getParameter(const.CURRENT_PROGRAM).asInstanceOf[Program]
-
 
   @inline final def impl_glClear(mask: Int): Unit = {
     real.clear(mask)
@@ -88,6 +98,14 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
   @inline final def impl_glGetShaderiv(shader: Shader, pname: Int): Int ={
     real.getShaderParameter(shader, pname).asInstanceOf[Int]
+  }
+
+  @inline final def impl_glGetShaderbv(shader: Shader, pname: Int): Boolean ={
+    real.getShaderParameter(shader, pname).asInstanceOf[Boolean]
+  }
+
+  @inline final def impl_getShaderInfoLog(shader: Shader): String ={
+    real.getShaderInfoLog(shader)
   }
 
   @inline final def impl_glCreateProgram(): Program ={

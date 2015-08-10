@@ -6,6 +6,9 @@ trait Constants {
   val CURRENT_PROGRAM: Int
   val VERTEX_SHADER: Int
   val FRAGMENT_SHADER: Int
+  val SHADER_TYPE: Int
+  val DELETE_STATUS: Int
+  val COMPILE_STATUS: Int
 }
 
 trait Context {
@@ -15,11 +18,9 @@ trait Context {
   type Buffer
   type UniformLocation
 
-  implicit val programNullable: Nullable[Program]
-  implicit val shaderNullable: Nullable[Shader]
-  implicit val uniformLocationNullable: Nullable[UniformLocation]
-//  def isNull(program: Program): Boolean
-//  def getNull(program: Program): Unit ={  }
+  implicit val programNullable: ResourceHandle[Program]
+  implicit val shaderNullable: ResourceHandle[Shader]
+  implicit val uniformLocationNullable: ResourceHandle[UniformLocation]
 
   def checkGlError(): Unit
   val const:Constants
@@ -36,6 +37,8 @@ trait Context {
   def impl_glShaderSource(shader: Shader, src: String): Unit
   def impl_glCompileShader(shader: Shader): Unit
   def impl_glGetShaderiv(shader: Shader, pname: Int): Int
+  def impl_glGetShaderbv(shader: Shader, pname: Int): Boolean
+  def impl_getShaderInfoLog(shader: Shader): String
   def impl_glCreateProgram(): Program
   def impl_glDeleteProgram(program: Program): Unit
   def impl_glGetProgramiv(program: Program, pname: Int): Int
@@ -123,6 +126,20 @@ trait Context {
     checkGlError()
     r
   }
+
+  @inline final def getShaderbv(shader: Shader, pname: Int): Boolean = {
+    val r = impl_glGetShaderbv(shader, pname)
+    checkGlError()
+    r
+  }
+
+
+  @inline final def getShaderInfoLog(shader: Shader): String = {
+    val r = impl_getShaderInfoLog(shader)
+    checkGlError()
+    r
+  }
+
 
   @inline final def createProgram(): Program = {
     val r = impl_glCreateProgram()

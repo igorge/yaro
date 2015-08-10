@@ -18,6 +18,47 @@ import scalajs.js
 import org.scalajs.dom
 import dom.raw.WebGLRenderingContext._
 
+
+object shaderSource {
+
+  val vertexShader =
+    """
+      |invariant gl_Position;
+      |
+      |uniform mat4 u_mv;
+      |uniform mat4 u_projection;
+      |
+      |attribute vec3 a_position;
+      |attribute vec2 a_tex_coordinate;
+      |attribute vec4 a_color;
+      |
+      |varying vec4 v_color;
+      |varying vec2 v_tex_coordinate;
+      |
+      |void main() {
+      |   v_color = a_color;
+      |   v_tex_coordinate = a_tex_coordinate;
+      |   gl_Position = u_projection*u_mv*vec4(a_position, 1);
+      |}
+      |
+    """.stripMargin
+
+  val fragmentShader =
+    """
+      |precision mediump float;
+      |
+      |varying vec4 v_color;
+      |varying vec2 v_tex_coordinate;
+      |
+      |uniform sampler2D u_texture;
+      |
+      |void main() {
+      |   gl_FragColor = texture2D(u_texture, v_tex_coordinate);
+      |}
+      |
+    """.stripMargin
+}
+
 object app extends JSApp with LazyLogging {
 
   def main(): Unit = {
@@ -32,26 +73,27 @@ object app extends JSApp with LazyLogging {
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
 
+
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.WebGlResourceContext with gie.gl.Resources with gie.gl.Simplex3D
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.Simplex3D
+
+      val shader = gl.shaderOps(gl.createVertexShader())
+        .source(shaderSource.vertexShader)
+        .compile
+        .get
 
       def ff(t:Double): Unit ={
 
         dom.window.requestAnimationFrame(ff _)
 
+        gl.viewport(0,0,canvas.width, canvas.height)
         gl.clearColor(Random.nextFloat(), Random.nextFloat(), Random.nextFloat(),1f)
         gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT)
       }
 
       ff(0)
-
-
-
-//      gl.asInstanceOf[js.Dynamic].viewportWidth = canvas.width
-//      gl.asInstanceOf[js.Dynamic].viewportHeight = canvas.height
-
 
     })
 
