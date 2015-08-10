@@ -18,7 +18,7 @@ trait RichContext { this: Context =>
     }
 
     def free(): Unit ={
-      implicitly[ResourceHandle[Shader]].free(shader)
+      deleteShader(shader)
     }
 
   }

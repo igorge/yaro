@@ -18,10 +18,6 @@ trait Context {
   type Buffer
   type UniformLocation
 
-  implicit val programNullable: ResourceHandle[Program]
-  implicit val shaderNullable: ResourceHandle[Shader]
-  implicit val uniformLocationNullable: ResourceHandle[UniformLocation]
-
   def checkGlError(): Unit
   val const:Constants
 

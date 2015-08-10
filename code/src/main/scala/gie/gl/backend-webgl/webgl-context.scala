@@ -22,27 +22,6 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   final type Buffer = dom.raw.WebGLBuffer
   final type UniformLocation = dom.raw.WebGLUniformLocation
 
-  implicit final val programNullable: ResourceHandle[Program] = new Object with ResourceHandle[Program] {
-    @inline final def isNull(x: Program): Boolean = x eq null
-    @inline final def nullValue: Program = null
-    @inline final def create(): Program = createProgram()
-    @inline final def free(x: Program): Unit= { assume(! isNull(x) ); deleteProgram(x)  }
-  }
-  implicit final val shaderNullable: ResourceHandle[Shader] = new Object with ResourceHandle[Shader] {
-    @inline final def isNull(x: Shader): Boolean = x eq null
-    @inline final def nullValue: Shader = null
-    @inline final def create(): Shader = throw new UnsupportedOperationException()
-    @inline final def free(x: Shader): Unit= { assume(! isNull(x) ); deleteShader(x)  }
-  }
-
-  // not a resource but define for null values
-  implicit final val uniformLocationNullable: ResourceHandle[UniformLocation] = new Object with ResourceHandle[UniformLocation] {
-    @inline final def isNull(x: UniformLocation): Boolean = x eq null
-    @inline final def nullValue: UniformLocation = null
-    @inline final def create(): UniformLocation = throw new UnsupportedOperationException()
-    @inline final def free(x: UniformLocation): Unit= {}
-  }
-
   // ctor
   //
   if(real eq null) throw new ContextInitializationException("dom.raw.WebGLRenderingContext eq null")
