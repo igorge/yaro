@@ -8,6 +8,8 @@ object WebGLContext extends Constants {
   final val NO_ERROR = dom.raw.WebGLRenderingContext.NO_ERROR
   final val MAX_VERTEX_ATTRIBS: Int = dom.raw.WebGLRenderingContext.MAX_VERTEX_ATTRIBS
   final val CURRENT_PROGRAM: Int = dom.raw.WebGLRenderingContext.CURRENT_PROGRAM
+  final val VERTEX_SHADER: Int = dom.raw.WebGLRenderingContext.VERTEX_SHADER
+  final val FRAGMENT_SHADER: Int = dom.raw.WebGLRenderingContext.FRAGMENT_SHADER
 }
 
 class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
@@ -16,6 +18,19 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   final type Program = dom.raw.WebGLProgram
   final type Buffer = dom.raw.WebGLBuffer
   final type UniformLocation = dom.raw.WebGLUniformLocation
+
+  implicit final val programNullable: Nullable[Program] = new Object with Nullable[Program] {
+    @inline final def isNull(x: Program): Boolean = x eq null
+    @inline final def nullValue: Program = null
+  }
+  implicit final val shaderNullable: Nullable[Shader] = new Object with Nullable[Shader] {
+    @inline final def isNull(x: Shader): Boolean = x eq null
+    @inline final def nullValue: Shader = null
+  }
+  implicit final val uniformLocationNullable: Nullable[UniformLocation] = new Object with Nullable[UniformLocation] {
+    @inline final def isNull(x: UniformLocation): Boolean = x eq null
+    @inline final def nullValue: UniformLocation = null
+  }
 
   // ctor
   //
@@ -29,6 +44,9 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     val code = real.getError()
     if ( code != const.NO_ERROR ) throw new GlGetErrorException(code)
   }
+
+
+  @inline final def currentProgram(): Program = real.getParameter(const.CURRENT_PROGRAM).asInstanceOf[Program]
 
 
   @inline final def impl_glClear(mask: Int): Unit = {
@@ -149,6 +167,11 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
       v(12),v(13),v(14),v(15)
     ))
   }
+
+  @inline final def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit = {
+    real.drawArrays(mode, first, count)
+  }
+
 
 
 }

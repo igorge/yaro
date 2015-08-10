@@ -4,6 +4,8 @@ trait Constants {
   val NO_ERROR: Int
   val MAX_VERTEX_ATTRIBS: Int
   val CURRENT_PROGRAM: Int
+  val VERTEX_SHADER: Int
+  val FRAGMENT_SHADER: Int
 }
 
 trait Context {
@@ -12,6 +14,12 @@ trait Context {
   type Program
   type Buffer
   type UniformLocation
+
+  implicit val programNullable: Nullable[Program]
+  implicit val shaderNullable: Nullable[Shader]
+  implicit val uniformLocationNullable: Nullable[UniformLocation]
+//  def isNull(program: Program): Boolean
+//  def getNull(program: Program): Unit ={  }
 
   def checkGlError(): Unit
   val const:Constants
@@ -46,12 +54,12 @@ trait Context {
   def impl_glUniform4fv(location: UniformLocation, v: Array[Float]): Unit
   def impl_glUniform1i(location: UniformLocation, v: Int): Unit
   def impl_glUniformMatrix4fv(location: UniformLocation, transpose: Boolean, v: Array[Float]): Unit
+  def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit
 
 
   @inline final def get_maxVertexAttribs() = getInteger(const.MAX_VERTEX_ATTRIBS)
 
-  @inline final def get_currentProgram() = getInteger(const.CURRENT_PROGRAM)
-
+  def currentProgram(): Program
 
   @inline final def clearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit={
     impl_glClearColor(red, green, blue, alpha)
@@ -207,5 +215,10 @@ trait Context {
 
   @inline final def uniformMatrix4fv(location: UniformLocation, transpose: Boolean, v: Array[Float]): Unit={
     impl_glUniformMatrix4fv(location, transpose, v)
+  }
+
+  @inline final def drawArrays(mode: Int, first: Int, count: Int): Unit={
+    impl_glDrawArrays(mode, first, count)
+    checkGlError()
   }
 }
