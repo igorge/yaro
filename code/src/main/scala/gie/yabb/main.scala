@@ -94,12 +94,12 @@ object app extends JSApp with LazyLogging {
 
       val vertexShader = gl.shaderOps(gl.createVertexShader())
         .source(shaderSource.vertexShader)
-        .compile
+        .compile()
         .get
 
       val fragmentShader = gl.shaderOps(gl.createFragmentShader())
         .source(shaderSource.fragmentShader)
-        .compile
+        .compile()
         .get
 
       program
