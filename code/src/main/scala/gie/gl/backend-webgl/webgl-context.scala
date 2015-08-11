@@ -13,14 +13,23 @@ object WebGLContext extends Constants {
   final val SHADER_TYPE: Int = dom.raw.WebGLRenderingContext.SHADER_TYPE
   final val DELETE_STATUS: Int = dom.raw.WebGLRenderingContext.DELETE_STATUS
   final val COMPILE_STATUS: Int = dom.raw.WebGLRenderingContext.COMPILE_STATUS
+  final val LINK_STATUS: Int = dom.raw.WebGLRenderingContext.LINK_STATUS
 }
 
 class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
-  final type Shader = dom.raw.WebGLShader
-  final type Program = dom.raw.WebGLProgram
-  final type Buffer = dom.raw.WebGLBuffer
-  final type UniformLocation = dom.raw.WebGLUniformLocation
+  final type GLShader = dom.raw.WebGLShader
+  final type GLProgram = dom.raw.WebGLProgram
+  final type GLBuffer = dom.raw.WebGLBuffer
+  final type GLUniformLocation = dom.raw.WebGLUniformLocation
+
+  @inline final def uniformLocation_null: GLUniformLocation = null
+  @inline final def uniformLocation_null_?(x: GLUniformLocation): Boolean = x eq null
+
+  @inline final def program_null: GLProgram = null
+  @inline final def program_null_?(x: GLProgram): Boolean = x eq null
+
+
 
   // ctor
   //
@@ -36,7 +45,7 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   }
 
 
-  @inline final def currentProgram(): Program = real.getParameter(const.CURRENT_PROGRAM).asInstanceOf[Program]
+  @inline final def currentProgram(): GLProgram = real.getParameter(const.CURRENT_PROGRAM).asInstanceOf[GLProgram]
 
   @inline final def impl_glClear(mask: Int): Unit = {
     real.clear(mask)
@@ -59,71 +68,79 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   @inline final def impl_glGetIntegerv(pname: Int): Int ={
     real.getParameter(pname).asInstanceOf[Int]
   }
-  @inline final def impl_glCreateShader(shaderType: Int): Shader ={
+  @inline final def impl_glCreateShader(shaderType: Int): GLShader ={
     real.createShader( shaderType )
   }
 
-  @inline final def impl_glDeleteShader(shader: Shader): Unit ={
+  @inline final def impl_glDeleteShader(shader: GLShader): Unit ={
     real.deleteShader(shader)
   }
 
-  @inline final def impl_glShaderSource(shader: Shader, src: String): Unit ={
+  @inline final def impl_glShaderSource(shader: GLShader, src: String): Unit ={
     real.shaderSource(shader, src)
   }
 
-  @inline final def impl_glCompileShader(shader: Shader): Unit ={
+  @inline final def impl_glCompileShader(shader: GLShader): Unit ={
     real.compileShader(shader)
   }
 
-  @inline final def impl_glGetShaderiv(shader: Shader, pname: Int): Int ={
+  @inline final def impl_glGetShaderiv(shader: GLShader, pname: Int): Int ={
     real.getShaderParameter(shader, pname).asInstanceOf[Int]
   }
 
-  @inline final def impl_glGetShaderbv(shader: Shader, pname: Int): Boolean ={
+  @inline final def impl_glGetShaderbv(shader: GLShader, pname: Int): Boolean ={
     real.getShaderParameter(shader, pname).asInstanceOf[Boolean]
   }
 
-  @inline final def impl_getShaderInfoLog(shader: Shader): String ={
+  @inline final def impl_getShaderInfoLog(shader: GLShader): String ={
     real.getShaderInfoLog(shader)
   }
 
-  @inline final def impl_glCreateProgram(): Program ={
+  @inline final def impl_glCreateProgram(): GLProgram ={
     real.createProgram()
   }
 
-  @inline final def impl_glDeleteProgram(program: Program): Unit ={
+  @inline final def impl_glDeleteProgram(program: GLProgram): Unit ={
     real.deleteProgram(program)
   }
 
-  @inline final def impl_glGetProgramiv(program: Program, pname: Int): Int ={
+  @inline final def impl_getProgramInfoLog(program: GLProgram): String={
+    real.getProgramInfoLog(program)
+  }
+
+  @inline final def impl_glGetProgramiv(program: GLProgram, pname: Int): Int ={
     real.getProgramParameter(program, pname).asInstanceOf[Int]
   }
 
-  @inline final def impl_glAttachShader(program: Program, shader: Shader): Unit ={
+  @inline final def impl_glGetProgrambv(program: GLProgram, pname: Int): Boolean ={
+    real.getProgramParameter(program, pname).asInstanceOf[Boolean]
+  }
+
+  @inline final def impl_glAttachShader(program: GLProgram, shader: GLShader): Unit ={
     real.attachShader(program, shader)
   }
 
-  @inline final def impl_glBindAttribLocation(program: Program, index: Int, name: String): Unit ={
+  @inline final def impl_glBindAttribLocation(program: GLProgram, index: Int, name: String): Unit ={
     real.bindAttribLocation(program, index, name)
   }
 
-  @inline final def impl_glLinkProgram(program: Program): Unit ={
+  @inline final def impl_glLinkProgram(program: GLProgram): Unit ={
     real.linkProgram(program)
   }
 
-  @inline final def impl_glUseProgram(program: Program): Unit ={
+  @inline final def impl_glUseProgram(program: GLProgram): Unit ={
     real.useProgram(program)
   }
 
-  @inline final def impl_glCreateBuffer(): Buffer={
+  @inline final def impl_glCreateBuffer(): GLBuffer={
     real.createBuffer()
   }
 
-  @inline final def impl_glDeleteBuffer(buffer: Buffer): Unit={
+  @inline final def impl_glDeleteBuffer(buffer: GLBuffer): Unit={
     real.deleteBuffer(buffer)
   }
 
-  @inline final def impl_glBindBuffer(target: Int, buffer: Buffer): Unit={
+  @inline final def impl_glBindBuffer(target: Int, buffer: GLBuffer): Unit={
     real.bindBuffer(target, buffer)
   }
 
@@ -139,23 +156,23 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     real.disableVertexAttribArray(index)
   }
 
-  @inline final def impl_glGetUniformLocation(program: Program, name: String): UniformLocation ={
+  @inline final def impl_glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation ={
     real.getUniformLocation(program, name)
   }
 
-  @inline final def impl_glUniform1f(location: UniformLocation, x: Float): Unit={
+  @inline final def impl_glUniform1f(location: GLUniformLocation, x: Float): Unit={
     real.uniform1f(location, x)
   }
 
-  @inline final def impl_glUniform4fv(location: UniformLocation, v: Array[Float]): Unit={
+  @inline final def impl_glUniform4fv(location: GLUniformLocation, v: Array[Float]): Unit={
     real.uniform4fv(location, js.Array[Double](v(0),v(1),v(2),v(3))) // XXX: slow?
   }
 
-  @inline final def impl_glUniform1i(location: UniformLocation, x: Int): Unit={
+  @inline final def impl_glUniform1i(location: GLUniformLocation, x: Int): Unit={
     real.uniform1i(location, x)
   }
 
-  @inline final def impl_glUniformMatrix4fv(location: UniformLocation, transpose: Boolean, v: Array[Float]): Unit={
+  @inline final def impl_glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit={
     import js.JSConverters._
     real.uniformMatrix4fv(location, transpose, js.Array[Double]( // XXX: slow?
       v(0), v(1), v(2), v(3),

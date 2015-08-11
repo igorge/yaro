@@ -79,10 +79,39 @@ object app extends JSApp with LazyLogging {
 
       val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.Simplex3D
 
-      val shader = gl.shaderOps(gl.createVertexShader())
+
+      val mapToLocations = gl.nameToLocationsMaps()
+
+      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+
+      val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
+      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
+      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+
+      val program = gl.Program()
+
+      val vertexShader = gl.shaderOps(gl.createVertexShader())
         .source(shaderSource.vertexShader)
         .compile
         .get
+
+      val fragmentShader = gl.shaderOps(gl.createFragmentShader())
+        .source(shaderSource.fragmentShader)
+        .compile
+        .get
+
+      program
+        .attach(vertexShader).attach(fragmentShader)
+        .updateAndLink(mapToLocations)
+
+//      gl.VertexAttribute.updateLocations(program.get, attribs)
+//
+//      program.link()
+//
+//      gl.Uniform.updateLocations(program.get, uniforms)
+
 
       def ff(t:Double): Unit ={
 

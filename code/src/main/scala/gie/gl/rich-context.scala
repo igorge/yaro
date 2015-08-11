@@ -1,8 +1,12 @@
 package gie.gl
 
-trait RichContext { this: Context =>
+trait RichContext
+  extends RichUniformTrait
+  with    RichVertexAttributeTrait
+  with    RichProgramTrait
+{ this: Context =>
 
-  final class ShaderOps(val shader: Shader) {
+  final class ShaderOps(val shader: GLShader) {
     def get = shader
 
     def source(s: String) = {
@@ -23,10 +27,28 @@ trait RichContext { this: Context =>
 
   }
 
-  @inline final def shaderOps(shader: Shader) = new ShaderOps(shader)
+  final class ProgramOps(val program: GLProgram) {
+    def get = program
 
-  @inline final def createVertexShader(): Shader =  createShader(const.VERTEX_SHADER)
-  @inline final def createFragmentShader(): Shader =  createShader(const.FRAGMENT_SHADER)
-  @inline final def compilationStatus(shader: Shader): Boolean = getShaderbv(shader, const.COMPILE_STATUS)
+    def attach(shader: GLShader): this.type = {
+      attachShader(program, shader)
+      this
+    }
+
+    def use():this.type ={
+      useProgram(program)
+      this
+    }
+
+    def free(): Unit ={
+      deleteProgram(program)
+    }
+  }
+
+  @inline final def shaderOps(shader: GLShader) = new ShaderOps(shader)
+
+  @inline final def createVertexShader(): GLShader =  createShader(const.VERTEX_SHADER)
+  @inline final def createFragmentShader(): GLShader =  createShader(const.FRAGMENT_SHADER)
+  @inline final def compilationStatus(shader: GLShader): Boolean = getShaderbv(shader, const.COMPILE_STATUS)
 
 }

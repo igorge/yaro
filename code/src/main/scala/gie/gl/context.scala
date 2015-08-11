@@ -9,15 +9,26 @@ trait Constants {
   val SHADER_TYPE: Int
   val DELETE_STATUS: Int
   val COMPILE_STATUS: Int
+  val LINK_STATUS: Int
 }
 
 trait Context {
 
-  type Shader
-  type Program
-  type Buffer
-  type UniformLocation
+  type GLShader
+  type GLProgram
+  type GLBuffer
+  type GLUniformLocation
+  type GLVertexAttributeLocation = Int
 
+  def uniformLocation_null: GLUniformLocation
+  def uniformLocation_null_?(x: GLUniformLocation): Boolean
+
+  def program_null: GLProgram
+  def program_null_?(x: GLProgram): Boolean
+
+  @inline final def vertexAttributeLocation_null: GLVertexAttributeLocation = -1
+  @inline final def vertexAttributeLocation_null_?(x: GLVertexAttributeLocation): Boolean = x == -1
+  
   def checkGlError(): Unit
   val const:Constants
 
@@ -28,37 +39,39 @@ trait Context {
   def impl_glDisable(cap: Int): Unit
   def impl_glBlendFunc(sfactor: Int, dfactor: Int): Unit
   def impl_glGetIntegerv(pname: Int): Int
-  def impl_glCreateShader(shaderType: Int): Shader
-  def impl_glDeleteShader(shader: Shader): Unit
-  def impl_glShaderSource(shader: Shader, src: String): Unit
-  def impl_glCompileShader(shader: Shader): Unit
-  def impl_glGetShaderiv(shader: Shader, pname: Int): Int
-  def impl_glGetShaderbv(shader: Shader, pname: Int): Boolean
-  def impl_getShaderInfoLog(shader: Shader): String
-  def impl_glCreateProgram(): Program
-  def impl_glDeleteProgram(program: Program): Unit
-  def impl_glGetProgramiv(program: Program, pname: Int): Int
-  def impl_glAttachShader(program: Program, shader: Shader): Unit
-  def impl_glBindAttribLocation(program: Program, index: Int, name: String): Unit
-  def impl_glLinkProgram(program: Program): Unit
-  def impl_glUseProgram(program: Program): Unit
-  def impl_glBindBuffer(target: Int, buffer: Buffer): Unit
-  def impl_glCreateBuffer(): Buffer
-  def impl_glDeleteBuffer(buffer: Buffer): Unit
+  def impl_glCreateShader(shaderType: Int): GLShader
+  def impl_glDeleteShader(shader: GLShader): Unit
+  def impl_glShaderSource(shader: GLShader, src: String): Unit
+  def impl_glCompileShader(shader: GLShader): Unit
+  def impl_glGetShaderiv(shader: GLShader, pname: Int): Int
+  def impl_glGetShaderbv(shader: GLShader, pname: Int): Boolean
+  def impl_getShaderInfoLog(shader: GLShader): String
+  def impl_glCreateProgram(): GLProgram
+  def impl_glDeleteProgram(program: GLProgram): Unit
+  def impl_getProgramInfoLog(program: GLProgram): String
+  def impl_glGetProgramiv(program: GLProgram, pname: Int): Int
+  def impl_glGetProgrambv(program: GLProgram, pname: Int): Boolean
+  def impl_glAttachShader(program: GLProgram, shader: GLShader): Unit
+  def impl_glBindAttribLocation(program: GLProgram, index: Int, name: String): Unit
+  def impl_glLinkProgram(program: GLProgram): Unit
+  def impl_glUseProgram(program: GLProgram): Unit
+  def impl_glBindBuffer(target: Int, buffer: GLBuffer): Unit
+  def impl_glCreateBuffer(): GLBuffer
+  def impl_glDeleteBuffer(buffer: GLBuffer): Unit
   def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit
   def impl_glEnableVertexAttribArray(index: Int): Unit
   def impl_glDisableVertexAttribArray(index: Int): Unit
-  def impl_glGetUniformLocation(program: Program, name: String): UniformLocation
-  def impl_glUniform1f(location: UniformLocation, x: Float): Unit
-  def impl_glUniform4fv(location: UniformLocation, v: Array[Float]): Unit
-  def impl_glUniform1i(location: UniformLocation, v: Int): Unit
-  def impl_glUniformMatrix4fv(location: UniformLocation, transpose: Boolean, v: Array[Float]): Unit
+  def impl_glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation
+  def impl_glUniform1f(location: GLUniformLocation, x: Float): Unit
+  def impl_glUniform4fv(location: GLUniformLocation, v: Array[Float]): Unit
+  def impl_glUniform1i(location: GLUniformLocation, v: Int): Unit
+  def impl_glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit
   def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit
 
 
   @inline final def get_maxVertexAttribs() = getInteger(const.MAX_VERTEX_ATTRIBS)
 
-  def currentProgram(): Program
+  def currentProgram(): GLProgram
 
   @inline final def clearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit={
     impl_glClearColor(red, green, blue, alpha)
@@ -96,96 +109,109 @@ trait Context {
     r
   }
 
-  @inline final def createShader(shaderType: Int): Shader = {
+  @inline final def createShader(shaderType: Int): GLShader = {
     val r = impl_glCreateShader(shaderType)
     checkGlError()
     r
   }
 
-  @inline final def deleteShader(shader: Shader): Unit={
+  @inline final def deleteShader(shader: GLShader): Unit={
     impl_glDeleteShader(shader)
     checkGlError()
   }
 
-  @inline final def shaderSource(shader: Shader, src: String): Unit={
+  @inline final def shaderSource(shader: GLShader, src: String): Unit={
     impl_glShaderSource(shader, src)
     checkGlError()
   }
 
-  @inline final def compileShader(shader: Shader): Unit={
+  @inline final def compileShader(shader: GLShader): Unit={
     impl_glCompileShader(shader)
     checkGlError()
   }
 
-  @inline final def getShaderiv(shader: Shader, pname: Int): Int = {
+  @inline final def getShaderiv(shader: GLShader, pname: Int): Int = {
     val r = impl_glGetShaderiv(shader, pname)
     checkGlError()
     r
   }
 
-  @inline final def getShaderbv(shader: Shader, pname: Int): Boolean = {
+  @inline final def getShaderbv(shader: GLShader, pname: Int): Boolean = {
     val r = impl_glGetShaderbv(shader, pname)
     checkGlError()
     r
   }
 
 
-  @inline final def getShaderInfoLog(shader: Shader): String = {
+  @inline final def getShaderInfoLog(shader: GLShader): String ={
     val r = impl_getShaderInfoLog(shader)
     checkGlError()
     r
   }
 
+  @inline final def getProgramInfoLog(program: GLProgram): String ={
+    val r = impl_getProgramInfoLog(program)
+    checkGlError()
+    r
+  }
 
-  @inline final def createProgram(): Program = {
+
+
+  @inline final def createProgram(): GLProgram = {
     val r = impl_glCreateProgram()
     checkGlError()
     r
   }
 
-  @inline final def getProgramiv(program: Program, pname: Int): Int = {
+  @inline final def getProgramiv(program: GLProgram, pname: Int): Int = {
     val r = impl_glGetProgramiv(program, pname)
     checkGlError()
     r
   }
 
-  @inline final def deleteProgram(program: Program): Unit={
+  @inline final def getProgrambv(program: GLProgram, pname: Int): Boolean = {
+    val r = impl_glGetProgrambv(program, pname)
+    checkGlError()
+    r
+  }
+
+  @inline final def deleteProgram(program: GLProgram): Unit={
     impl_glDeleteProgram(program)
     checkGlError()
   }
 
-  @inline final def attachShader(program: Program, shader: Shader): Unit={
+  @inline final def attachShader(program: GLProgram, shader: GLShader): Unit={
     impl_glAttachShader(program, shader)
     checkGlError()
   }
 
-  @inline final def bindAttributeLocation(program: Program, index: Int, name: String): Unit={
+  @inline final def bindAttributeLocation(program: GLProgram, index: Int, name: String): Unit={
     impl_glBindAttribLocation(program, index, name)
     checkGlError()
   }
 
-  @inline final def linkProgram(program: Program): Unit={
+  @inline final def linkProgram(program: GLProgram): Unit={
     impl_glLinkProgram(program)
     checkGlError()
   }
 
-  @inline final def useProgram(program: Program): Unit={
+  @inline final def useProgram(program: GLProgram): Unit={
     impl_glUseProgram(program)
     checkGlError()
   }
 
-  @inline final def bindBuffer(target: Int, buffer: Buffer): Unit ={
+  @inline final def bindBuffer(target: Int, buffer: GLBuffer): Unit ={
     impl_glBindBuffer(target, buffer)
     checkGlError()
   }
 
-  @inline final def createBuffer(): Buffer={
+  @inline final def createBuffer(): GLBuffer={
     val r=impl_glCreateBuffer()
     checkGlError()
     r
   }
 
-  @inline final def deleteBuffer(buffer: Buffer): Unit={
+  @inline final def deleteBuffer(buffer: GLBuffer): Unit={
     impl_glDeleteBuffer(buffer)
     checkGlError()
   }
@@ -205,28 +231,28 @@ trait Context {
     checkGlError()
   }
 
-  @inline final def getUniformLocation(program: Program, name: String): UniformLocation={
+  @inline final def getUniformLocation(program: GLProgram, name: String): GLUniformLocation={
     val r = impl_glGetUniformLocation(program, name)
     checkGlError()
     r
   }
 
-  @inline final def uniform1f(location: UniformLocation, x: Float): Unit={
+  @inline final def uniform1f(location: GLUniformLocation, x: Float): Unit={
     impl_glUniform1f(location, x)
     checkGlError()
   }
 
-  @inline final def uniform4f(location: UniformLocation, v: Array[Float]): Unit={
+  @inline final def uniform4f(location: GLUniformLocation, v: Array[Float]): Unit={
     impl_glUniform4fv(location, v)
     checkGlError()
   }
 
-  @inline final def uniform1i(location: UniformLocation, v: Int): Unit={
+  @inline final def uniform1i(location: GLUniformLocation, v: Int): Unit={
     impl_glUniform1i(location, v)
     checkGlError()
   }
 
-  @inline final def uniformMatrix4fv(location: UniformLocation, transpose: Boolean, v: Array[Float]): Unit={
+  @inline final def uniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit={
     impl_glUniformMatrix4fv(location, transpose, v)
   }
 

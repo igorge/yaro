@@ -6,7 +6,7 @@ import simplex3d.math.float.functions._
 
 trait Simplex3D { this: Context=>
 
-  @inline final def uniformMatrix4fv(location: UniformLocation, transpose: Boolean, m: Mat4): Unit={
+  @inline final def uniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, m: Mat4): Unit={
 
     val v = if(transpose) Array(
       m.m00, m.m01, m.m02, m.m03,
