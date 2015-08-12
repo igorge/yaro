@@ -19,7 +19,6 @@ trait RichProgramTrait {
     final val attributes = collection.mutable.Map[String, VertexAttributeTrait]()
   }
 
-
   trait ProgramApiTrait {
     val program: GLProgram
 

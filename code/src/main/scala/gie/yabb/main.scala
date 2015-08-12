@@ -103,15 +103,9 @@ object app extends JSApp with LazyLogging {
         .get
 
       program
-        .attach(vertexShader).attach(fragmentShader)
+        .attach(vertexShader)
+        .attach(fragmentShader)
         .updateAndLink(mapToLocations)
-
-//      gl.VertexAttribute.updateLocations(program.get, attribs)
-//
-//      program.link()
-//
-//      gl.Uniform.updateLocations(program.get, uniforms)
-
 
       def ff(t:Double): Unit ={
 
