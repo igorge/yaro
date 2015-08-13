@@ -1,7 +1,7 @@
 package gie.gl
 
 trait RichVertexAttributeTrait {
-  this: Context =>
+  this: Context with RichContextCommon =>
 
   type AttributeMapType = scala.collection.Map[String, VertexAttributeTrait]
 

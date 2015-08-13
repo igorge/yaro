@@ -10,6 +10,16 @@ trait Constants {
   val DELETE_STATUS: Int
   val COMPILE_STATUS: Int
   val LINK_STATUS: Int
+  val TEXTURE_2D: Int
+  val TEXTURE_CUBE_MAP: Int
+  val TEXTURE0: Int
+  val TEXTURE1: Int
+  val TEXTURE2: Int
+  val TEXTURE3: Int
+  val TEXTURE4: Int
+  val TEXTURE5: Int
+  val TEXTURE6: Int
+  val TEXTURE7: Int
 }
 
 trait Context {
@@ -19,6 +29,7 @@ trait Context {
   type GLBuffer
   type GLUniformLocation
   type GLVertexAttributeLocation = Int
+  type GLTexture
 
   def uniformLocation_null: GLUniformLocation
   def uniformLocation_null_?(x: GLUniformLocation): Boolean
@@ -67,9 +78,14 @@ trait Context {
   def impl_glUniform1i(location: GLUniformLocation, v: Int): Unit
   def impl_glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit
   def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit
+  def impl_glGenTexture(): GLTexture
+  def impl_glDeleteTextures(texture: GLTexture): Unit
+  def impl_glIsTexture(texture: GLTexture): Boolean
+  def impl_glActiveTexture(texture: Int): Unit
+  def impl_glBindTexture(target: Int, texture: GLTexture): Unit
+  def impl_glTexParameterf(target: Int, pname: Int, param: Float): Unit
+  def impl_glTexParameteri(target: Int, pname: Int, param: Int): Unit
 
-
-  @inline final def get_maxVertexAttribs() = getInteger(const.MAX_VERTEX_ATTRIBS)
 
   def currentProgram(): GLProgram
 
@@ -260,4 +276,43 @@ trait Context {
     impl_glDrawArrays(mode, first, count)
     checkGlError()
   }
+
+  @inline final def IsTexture(texture: GLTexture): Boolean ={
+    val r = impl_glIsTexture(texture)
+    checkGlError()
+    r
+  }
+
+  @inline final def genTextures(): GLTexture ={
+    val r = impl_glGenTexture()
+    checkGlError()
+    r
+  }
+
+  @inline final def deleteTextures(texture: GLTexture): Unit={
+    impl_glDeleteTextures(texture)
+    checkGlError()
+  }
+
+  @inline final def activateTexture(texture: Int): Unit={
+    impl_glActiveTexture(texture)
+    checkGlError()
+  }
+
+  @inline final def bindTexture(target: Int, texture: GLTexture): Unit={
+    impl_glBindTexture(target, texture)
+    checkGlError()
+  }
+
+  @inline final def texParameter(target: Int, pname: Int, param: Float): Unit={
+    impl_glTexParameterf(target, pname, param)
+    checkGlError()
+  }
+
+  @inline final def texParameter(target: Int, pname: Int, param: Int): Unit={
+    impl_glTexParameteri(target, pname, param)
+    checkGlError()
+  }
+
+
 }

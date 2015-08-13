@@ -14,6 +14,16 @@ object WebGLContext extends Constants {
   final val DELETE_STATUS: Int = dom.raw.WebGLRenderingContext.DELETE_STATUS
   final val COMPILE_STATUS: Int = dom.raw.WebGLRenderingContext.COMPILE_STATUS
   final val LINK_STATUS: Int = dom.raw.WebGLRenderingContext.LINK_STATUS
+  final val TEXTURE_2D: Int = dom.raw.WebGLRenderingContext.TEXTURE_2D
+  final val TEXTURE_CUBE_MAP: Int = dom.raw.WebGLRenderingContext.TEXTURE_CUBE_MAP
+  final val TEXTURE0: Int = dom.raw.WebGLRenderingContext.TEXTURE0
+  final val TEXTURE1: Int = dom.raw.WebGLRenderingContext.TEXTURE1
+  final val TEXTURE2: Int = dom.raw.WebGLRenderingContext.TEXTURE2
+  final val TEXTURE3: Int = dom.raw.WebGLRenderingContext.TEXTURE3
+  final val TEXTURE4: Int = dom.raw.WebGLRenderingContext.TEXTURE4
+  final val TEXTURE5: Int = dom.raw.WebGLRenderingContext.TEXTURE5
+  final val TEXTURE6: Int = dom.raw.WebGLRenderingContext.TEXTURE6
+  final val TEXTURE7: Int = dom.raw.WebGLRenderingContext.TEXTURE7
 }
 
 class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
@@ -22,6 +32,7 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   final type GLProgram = dom.raw.WebGLProgram
   final type GLBuffer = dom.raw.WebGLBuffer
   final type GLUniformLocation = dom.raw.WebGLUniformLocation
+  final type GLTexture = dom.raw.WebGLTexture
 
   @inline final def uniformLocation_null: GLUniformLocation = null
   @inline final def uniformLocation_null_?(x: GLUniformLocation): Boolean = x eq null
@@ -186,6 +197,32 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     real.drawArrays(mode, first, count)
   }
 
+  @inline final def impl_glGenTexture(): GLTexture={
+    real.createTexture()
+  }
 
+  @inline final def impl_glDeleteTextures(texture: GLTexture): Unit={
+    real.deleteTexture(texture)
+  }
+
+  @inline final def impl_glIsTexture(texture: GLTexture): Boolean ={
+    real.isTexture()
+  }
+
+  @inline final def impl_glActiveTexture(texture: Int): Unit={
+    real.activeTexture(texture)
+  }
+
+  @inline final def impl_glBindTexture(target: Int, texture: GLTexture): Unit={
+    real.bindTexture(target, texture)
+  }
+
+  @inline final def impl_glTexParameterf(target: Int, pname: Int, param: Float): Unit={
+    real.texParameterf(target, pname, param.asInstanceOf[Int])  // XXX:
+  }
+
+  @inline final def impl_glTexParameteri(target: Int, pname: Int, param: Int): Unit={
+    real.texParameteri(target, pname, param)
+  }
 
 }
