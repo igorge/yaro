@@ -1,21 +1,45 @@
 package gie.gl
 
 trait RichVertexAttributeTrait {
-  this: Context with RichContextCommon =>
+  self: Context with RichContextCommon =>
 
-  type AttributeMapType = scala.collection.Map[String, VertexAttributeTrait]
+  type AttributeMapType = scala.collection.Map[String, VertexAttributeApiTrait]
 
-  trait VertexAttributeTrait {
+  trait VertexAttributeApiTrait {
     var location: GLVertexAttributeLocation
+
+    def get = location
+
+    @inline final def vertexAttribPointer(size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): this.type={
+      self.vertexAttribPointer(this.get, size, componentType, normalized, stride, offset )
+      this
+    }
+
+    @inline final def enable(): this.type= {
+      enableVertexAttribArray(this.get)
+      this
+    }
+
+    @inline final def disable(): this.type= {
+      disableVertexAttribArray(this.get)
+      this
+    }
+
+    @inline final def bindBuffer(buffer: GLBuffer): this.type={
+      self.bindBuffer(const.ARRAY_BUFFER, buffer)
+      this
+    }
+
+
   }
 
-  class VertexAttribute extends VertexAttributeTrait {
+  class VertexAttribute extends VertexAttributeApiTrait {
     var location: GLVertexAttributeLocation = vertexAttributeLocation_null
   }
 
   object VertexAttribute {
     def apply(): VertexAttribute = new VertexAttribute()
-    def apply(name: String, m: scala.collection.mutable.Map[String, VertexAttributeTrait]) = {
+    def apply(name: String, m: scala.collection.mutable.Map[String, VertexAttributeApiTrait]) = {
       val uniform = new VertexAttribute()
       m.put(name, uniform)
       uniform

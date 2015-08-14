@@ -1,11 +1,13 @@
 package gie.gl
 
 import org.scalajs.dom
+import scala.scalajs.js.typedarray.Float32Array
 import scalajs.js
 
 
 object WebGLContext extends Constants {
   final val NO_ERROR = dom.raw.WebGLRenderingContext.NO_ERROR
+  final val TRIANGLES: Int = dom.raw.WebGLRenderingContext.TRIANGLES
   final val MAX_VERTEX_ATTRIBS: Int = dom.raw.WebGLRenderingContext.MAX_VERTEX_ATTRIBS
   final val CURRENT_PROGRAM: Int = dom.raw.WebGLRenderingContext.CURRENT_PROGRAM
   final val VERTEX_SHADER: Int = dom.raw.WebGLRenderingContext.VERTEX_SHADER
@@ -24,6 +26,13 @@ object WebGLContext extends Constants {
   final val TEXTURE5: Int = dom.raw.WebGLRenderingContext.TEXTURE5
   final val TEXTURE6: Int = dom.raw.WebGLRenderingContext.TEXTURE6
   final val TEXTURE7: Int = dom.raw.WebGLRenderingContext.TEXTURE7
+  final val ARRAY_BUFFER: Int = dom.raw.WebGLRenderingContext.ARRAY_BUFFER
+  final val ELEMENT_ARRAY_BUFFER: Int = dom.raw.WebGLRenderingContext.ELEMENT_ARRAY_BUFFER
+  final val STATIC_DRAW: Int = dom.raw.WebGLRenderingContext.STATIC_DRAW
+  final val DYNAMIC_DRAW: Int = dom.raw.WebGLRenderingContext.DYNAMIC_DRAW
+  final val STREAM_DRAW: Int = dom.raw.WebGLRenderingContext.STREAM_DRAW
+  final val FLOAT: Int = dom.raw.WebGLRenderingContext.FLOAT
+
 }
 
 class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
@@ -153,6 +162,12 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
   @inline final def impl_glBindBuffer(target: Int, buffer: GLBuffer): Unit={
     real.bindBuffer(target, buffer)
+  }
+
+
+  @inline final def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit={
+    import js.JSConverters._
+    real.bufferData(target, new Float32Array(data.toJSArray), usage)  // XXX: slow?
   }
 
   @inline final def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit={

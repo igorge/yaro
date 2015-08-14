@@ -21,7 +21,7 @@ import dom.raw.WebGLRenderingContext._
 
 object shaderSource {
 
-  val vertexShader =
+  val vertexShaderAA =
     """
       |invariant gl_Position;
       |
@@ -43,7 +43,7 @@ object shaderSource {
       |
     """.stripMargin
 
-  val fragmentShader =
+  val fragmentShaderAA =
     """
       |precision mediump float;
       |
@@ -54,6 +54,29 @@ object shaderSource {
       |
       |void main() {
       |   gl_FragColor = texture2D(u_texture, v_tex_coordinate);
+      |}
+      |
+    """.stripMargin
+
+  val vertexShader =
+    """
+      |invariant gl_Position;
+      |
+      |
+      |attribute vec3 a_position;
+      |
+      |void main() {
+      |   gl_Position = vec4(a_position, 1);
+      |}
+      |
+    """.stripMargin
+
+  val fragmentShader =
+    """
+      |precision mediump float;
+      |
+      |void main() {
+      |   gl_FragColor = vec4(0.1, 0.2, 0.3, 1);
       |}
       |
     """.stripMargin
@@ -80,15 +103,21 @@ object app extends JSApp with LazyLogging {
       val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.Simplex3D
 
 
+      val geom = gie.geom.square(1,1,1)
+      val squareBuffer = gl.createBuffer()
+      val nullBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.const.ARRAY_BUFFER, squareBuffer)
+      gl.bufferData(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
+
       val mapToLocations = gl.nameToLocationsMaps()
 
-      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
-      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+//      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+//      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+//      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
       val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
-      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
-      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+//      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
+//      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
       val program = gl.Program()
 
@@ -107,13 +136,27 @@ object app extends JSApp with LazyLogging {
         .attach(fragmentShader)
         .updateAndLink(mapToLocations)
 
+      gl.viewport(0,0,canvas.width, canvas.height)
+      gl.clearColor(0,0,0,1f)
+
+
+      program.use()
+
+      a_position
+        .bindBuffer(squareBuffer)
+        .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
+
+      gl.bindBuffer(gl.const.ARRAY_BUFFER, nullBuffer) //debug
+
       def ff(t:Double): Unit ={
 
         dom.window.requestAnimationFrame(ff _)
 
-        gl.viewport(0,0,canvas.width, canvas.height)
-        gl.clearColor(Random.nextFloat(), Random.nextFloat(), Random.nextFloat(),1f)
         gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT)
+
+        a_position.enable()
+
+        gl.drawArrays(gl.const.TRIANGLES, 0, 6)
       }
 
       ff(0)

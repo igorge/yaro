@@ -11,12 +11,12 @@ trait RichProgramTrait {
 
   trait NameToLocationWriteMaps extends NameToLocationReadMaps {
     val uniforms: collection.mutable.Map[String, UniformTrait]
-    val attributes: collection.mutable.Map[String, VertexAttributeTrait]
+    val attributes: collection.mutable.Map[String, VertexAttributeApiTrait]
   }
 
   def nameToLocationsMaps(): NameToLocationWriteMaps = new Object with NameToLocationWriteMaps {
     final val uniforms = collection.mutable.Map[String, UniformTrait]()
-    final val attributes = collection.mutable.Map[String, VertexAttributeTrait]()
+    final val attributes = collection.mutable.Map[String, VertexAttributeApiTrait]()
   }
 
   trait ProgramApiTrait {

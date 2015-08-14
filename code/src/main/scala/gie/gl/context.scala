@@ -2,6 +2,7 @@ package gie.gl
 
 trait Constants {
   val NO_ERROR: Int
+  val TRIANGLES: Int
   val MAX_VERTEX_ATTRIBS: Int
   val CURRENT_PROGRAM: Int
   val VERTEX_SHADER: Int
@@ -20,6 +21,12 @@ trait Constants {
   val TEXTURE5: Int
   val TEXTURE6: Int
   val TEXTURE7: Int
+  val ARRAY_BUFFER: Int
+  val ELEMENT_ARRAY_BUFFER: Int
+  val STATIC_DRAW: Int
+  val DYNAMIC_DRAW: Int
+  val STREAM_DRAW: Int
+  val FLOAT: Int
 }
 
 trait Context {
@@ -69,6 +76,7 @@ trait Context {
   def impl_glBindBuffer(target: Int, buffer: GLBuffer): Unit
   def impl_glCreateBuffer(): GLBuffer
   def impl_glDeleteBuffer(buffer: GLBuffer): Unit
+  def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit
   def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit
   def impl_glEnableVertexAttribArray(index: Int): Unit
   def impl_glDisableVertexAttribArray(index: Int): Unit
@@ -229,6 +237,11 @@ trait Context {
 
   @inline final def deleteBuffer(buffer: GLBuffer): Unit={
     impl_glDeleteBuffer(buffer)
+    checkGlError()
+  }
+
+  @inline final def bufferData(target: Int, data: Array[Float], usage: Int): Unit={
+    impl_glBufferData(target, data, usage)
     checkGlError()
   }
 
