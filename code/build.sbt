@@ -4,6 +4,8 @@ version       := "0.1"
 
 scalaVersion  := "2.11.7"
 
+scalacOptions := Seq("-optimise", "-Xlint", "-unchecked", "-deprecation", "-encoding", "utf8")
+
 enablePlugins(ScalaJSPlugin)
 
 //unmanagedSourceDirectories in Compile += baseDirectory.value / "../shared"
