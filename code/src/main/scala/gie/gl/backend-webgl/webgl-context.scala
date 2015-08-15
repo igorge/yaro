@@ -59,7 +59,7 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
   final val const = WebGLContext
 
-  def checkGlError(): Unit = {
+  @inline def checkGlError(): Unit = {
     val code = real.getError()
     if ( code != const.NO_ERROR ) throw new GlGetErrorException(code)
   }
@@ -221,7 +221,7 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   }
 
   @inline final def impl_glIsTexture(texture: GLTexture): Boolean ={
-    real.isTexture()
+    real.isTexture(texture)
   }
 
   @inline final def impl_glActiveTexture(texture: Int): Unit={
