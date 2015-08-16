@@ -5,19 +5,9 @@ import slogging._
 
 
 import scala.scalajs.js.JSApp
-import scala.scalajs.js.annotation.JSExport
 
-
-import simplex3d.math._
-import simplex3d.math.float._
-import simplex3d.math.float.functions._
-
-
-import scala.util.Random
 import scalajs.js
 import org.scalajs.dom
-//import dom.raw.WebGLRenderingContext._
-
 
 object shaderSource {
 
@@ -75,7 +65,7 @@ object shaderSource {
       |
       |void main() {
       |   v_color = vec4(a_color, 1);
-      |   gl_Position = u_mv*vec4(a_position, 1);
+      |   gl_Position = vec4(a_position, 1);
       |}
       |
     """.stripMargin
@@ -111,7 +101,7 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.Simplex3D
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -123,7 +113,7 @@ object app extends JSApp with LazyLogging {
 
       val mapToLocations = gl.nameToLocationsMaps()
 
-      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+      //val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
 //      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
 //      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
@@ -174,11 +164,11 @@ object app extends JSApp with LazyLogging {
         a_position.enable()
         a_color.enable()
 
-        val m = Mat4.apply(
-          Mat4x3
-            translate( Vec3(0.5f, 0, 0) )             //rotateZ(radians(12))
-        )
-        gl.uniformMatrix4fv(u_mv.get, true, m)
+//        val m = Mat4.apply(
+//          Mat4x3
+//            translate( Vec3(0.5f, 0, 0) )             //rotateZ(radians(12))
+//        )
+//        gl.uniformMatrix4fv(u_mv.get, true, m)
 
 
         gl.drawArrays(gl.const.TRIANGLES, 0, 6)
@@ -189,7 +179,7 @@ object app extends JSApp with LazyLogging {
     })
 
     //val m2 = Mat2(1, 2, 3, 4)
-    val model = Mat4x3.scale(Vec3(1, 1, 3)) rotateZ(radians(45)) translate(Vec3(10, 5, 10))
+//    val model = Mat4x3.scale(Vec3(1, 1, 3)) rotateZ(radians(45)) translate(Vec3(10, 5, 10))
 
 
 
