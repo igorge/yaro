@@ -29,6 +29,14 @@ trait Constants {
   val FLOAT: Int
 }
 
+trait ContextUnbind {
+  gl: Context =>
+
+  @inline def bindNullBuffer(target: Int): Unit={
+    gl.bindBuffer(target, gl.buffer_null)
+  }
+}
+
 trait Context {
 
   type GLShader
@@ -43,6 +51,9 @@ trait Context {
 
   def program_null: GLProgram
   def program_null_?(x: GLProgram): Boolean
+
+  def buffer_null: GLBuffer
+  def buffer_null_?(x: GLProgram): Boolean
 
   @inline final def vertexAttributeLocation_null: GLVertexAttributeLocation = -1
   @inline final def vertexAttributeLocation_null_?(x: GLVertexAttributeLocation): Boolean = x == -1
@@ -77,6 +88,7 @@ trait Context {
   def impl_glCreateBuffer(): GLBuffer
   def impl_glDeleteBuffer(buffer: GLBuffer): Unit
   def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit
+  def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit
   def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit
   def impl_glEnableVertexAttribArray(index: Int): Unit
   def impl_glDisableVertexAttribArray(index: Int): Unit
@@ -241,6 +253,11 @@ trait Context {
   }
 
   @inline final def bufferData(target: Int, data: Array[Float], usage: Int): Unit={
+    impl_glBufferData(target, data, usage)
+    checkGlError()
+  }
+
+  @inline final def bufferData(target: Int, data: Seq[Float], usage: Int): Unit={
     impl_glBufferData(target, data, usage)
     checkGlError()
   }

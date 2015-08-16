@@ -49,6 +49,8 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   @inline final def program_null: GLProgram = null
   @inline final def program_null_?(x: GLProgram): Boolean = x eq null
 
+  @inline final def buffer_null: GLBuffer = null
+  @inline final def buffer_null_?(x: GLProgram): Boolean = x eq null
 
 
   // ctor
@@ -169,6 +171,12 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     import js.JSConverters._
     real.bufferData(target, new Float32Array(data.toJSArray), usage)  // XXX: slow?
   }
+
+  @inline final def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit={
+    import js.JSConverters._
+    real.bufferData(target, new Float32Array(data.toJSArray), usage)  // XXX: slow?
+  }
+
 
   @inline final def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit={
     real.vertexAttribPointer(indx, size, componentType, normalized, stride, offset)

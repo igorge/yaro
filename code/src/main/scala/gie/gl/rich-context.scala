@@ -1,15 +1,23 @@
 package gie.gl
 
-import scala.annotation.switch
 
 trait RichContextCommon {
-  this: Context =>
+  gl: Context with ContextUnbind =>
 
   @inline final def createVertexShader(): GLShader =  createShader(const.VERTEX_SHADER)
   @inline final def createFragmentShader(): GLShader =  createShader(const.FRAGMENT_SHADER)
   @inline final def compilationStatus(shader: GLShader): Boolean = getShaderbv(shader, const.COMPILE_STATUS)
 
   @inline final def get_maxVertexAttribs() = getInteger(const.MAX_VERTEX_ATTRIBS)
+
+  @inline final def createBuffer(target: Int, data: Seq[Float], usage: Int): GLBuffer={
+    val buffer = gl.createBuffer()
+    gl.bindBuffer(target, buffer)
+    gl.bufferData(target, data, usage)
+    gl.bindNullBuffer(target)
+
+    buffer
+  }
 }
 
 trait RichContext
@@ -18,7 +26,7 @@ trait RichContext
   with    RichProgramTrait
   with    RichShaderTrait
   with    RichContextCommon {
-  this: Context =>
+  this: Context with ContextUnbind =>
 
 
 }

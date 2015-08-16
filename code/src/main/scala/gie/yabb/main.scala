@@ -58,14 +58,21 @@ object shaderSource {
       |
     """.stripMargin
 
+
+
+
+
   val vertexShader =
     """
       |invariant gl_Position;
       |
-      |
+      |attribute vec3 a_color;
       |attribute vec3 a_position;
       |
+      |varying vec4 v_color;
+      |
       |void main() {
+      |   v_color = vec4(a_color, 1);
       |   gl_Position = vec4(a_position, 1);
       |}
       |
@@ -75,8 +82,10 @@ object shaderSource {
     """
       |precision mediump float;
       |
+      |varying vec4 v_color;
+      |
       |void main() {
-      |   gl_FragColor = vec4(0.1, 0.2, 0.3, 1);
+      |   gl_FragColor = v_color;
       |}
       |
     """.stripMargin
@@ -100,14 +109,15 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.Simplex3D
-
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.Simplex3D
 
       val geom = gie.geom.square(1,1,1)
-      val squareBuffer = gl.createBuffer()
-      val nullBuffer = gl.createBuffer()
-      gl.bindBuffer(gl.const.ARRAY_BUFFER, squareBuffer)
-      gl.bufferData(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
+      val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
+      val squareColors = gl.createBuffer(
+        target = gl.const.ARRAY_BUFFER,
+        usage = gl.const.STATIC_DRAW,
+        data = Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
+      )
 
       val mapToLocations = gl.nameToLocationsMaps()
 
@@ -116,7 +126,7 @@ object app extends JSApp with LazyLogging {
 //      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
       val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
-//      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
+      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
 //      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
       val program = gl.Program()
@@ -146,20 +156,26 @@ object app extends JSApp with LazyLogging {
         .bindBuffer(squareBuffer)
         .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
-      gl.bindBuffer(gl.const.ARRAY_BUFFER, nullBuffer) //debug
+      a_color
+        .bindBuffer(squareColors)
+        .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
-      def ff(t:Double): Unit ={
 
-        dom.window.requestAnimationFrame(ff _)
+      gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
+
+      def tick(t:Double): Unit ={
+
+        dom.window.requestAnimationFrame(tick _)
 
         gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT)
 
         a_position.enable()
+        a_color.enable()
 
         gl.drawArrays(gl.const.TRIANGLES, 0, 6)
       }
 
-      ff(0)
+      tick(0)
 
     })
 
