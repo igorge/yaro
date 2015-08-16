@@ -16,7 +16,7 @@ import simplex3d.math.float.functions._
 import scala.util.Random
 import scalajs.js
 import org.scalajs.dom
-import dom.raw.WebGLRenderingContext._
+//import dom.raw.WebGLRenderingContext._
 
 
 object shaderSource {
@@ -116,7 +116,7 @@ object app extends JSApp with LazyLogging {
       val squareColors = gl.createBuffer(
         target = gl.const.ARRAY_BUFFER,
         usage = gl.const.STATIC_DRAW,
-        data = Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
+        data = js.Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
       )
 
       val mapToLocations = gl.nameToLocationsMaps()
@@ -167,7 +167,7 @@ object app extends JSApp with LazyLogging {
 
         dom.window.requestAnimationFrame(tick _)
 
-        gl.clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT)
+        gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
 
         a_position.enable()
         a_color.enable()

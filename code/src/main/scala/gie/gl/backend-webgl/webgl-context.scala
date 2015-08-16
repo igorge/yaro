@@ -8,6 +8,8 @@ import scalajs.js
 object WebGLContext extends Constants {
   final val NO_ERROR = dom.raw.WebGLRenderingContext.NO_ERROR
   final val TRIANGLES: Int = dom.raw.WebGLRenderingContext.TRIANGLES
+  final val COLOR_BUFFER_BIT: Int = dom.raw.WebGLRenderingContext.COLOR_BUFFER_BIT
+  final val DEPTH_BUFFER_BIT: Int = dom.raw.WebGLRenderingContext.DEPTH_BUFFER_BIT
   final val MAX_VERTEX_ATTRIBS: Int = dom.raw.WebGLRenderingContext.MAX_VERTEX_ATTRIBS
   final val CURRENT_PROGRAM: Int = dom.raw.WebGLRenderingContext.CURRENT_PROGRAM
   final val VERTEX_SHADER: Int = dom.raw.WebGLRenderingContext.VERTEX_SHADER

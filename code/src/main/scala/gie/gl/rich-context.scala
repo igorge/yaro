@@ -18,6 +18,16 @@ trait RichContextCommon {
 
     buffer
   }
+
+  @inline final def createBuffer(target: Int, data: Array[Float], usage: Int): GLBuffer={
+    val buffer = gl.createBuffer()
+    gl.bindBuffer(target, buffer)
+    gl.bufferData(target, data, usage)
+    gl.bindNullBuffer(target)
+
+    buffer
+  }
+
 }
 
 trait RichContext

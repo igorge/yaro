@@ -3,6 +3,8 @@ package gie.gl
 trait Constants {
   val NO_ERROR: Int
   val TRIANGLES: Int
+  val COLOR_BUFFER_BIT: Int
+  val DEPTH_BUFFER_BIT: Int
   val MAX_VERTEX_ATTRIBS: Int
   val CURRENT_PROGRAM: Int
   val VERTEX_SHADER: Int
