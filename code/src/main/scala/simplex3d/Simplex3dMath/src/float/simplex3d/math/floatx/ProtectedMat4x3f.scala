@@ -17,20 +17,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package simplex3d.math.floatx
 
-package simplex3d.math.floatx;
-
-import java.io.Serializable;
-import simplex3d.math.types.*;
-
+import java.io.Serializable
+import simplex3d.math.types._
 
 /**
  * @author Aleksey Nikiforov (lex)
  */
-abstract class ProtectedMat4x3f<P> extends AnyMat4x3<P> implements Serializable {
-    public static final long serialVersionUID = 8104346712419693669L;
-    float p00; float p01; float p02;
-    float p10; float p11; float p12;
-    float p20; float p21; float p22;
-    float p30; float p31; float p32;
+@SerialVersionUID(8104346712419693669L)
+abstract class ProtectedMat4x3f[P] extends AnyMat4x3[P] with Serializable {
+  private[floatx] var p00: Float = _
+  private[floatx] var p01: Float = _
+  private[floatx] var p02: Float = _
+  private[floatx] var p10: Float = _
+  private[floatx] var p11: Float = _
+  private[floatx] var p12: Float = _
+  private[floatx] var p20: Float = _
+  private[floatx] var p21: Float = _
+  private[floatx] var p22: Float = _
+  private[floatx] var p30: Float = _
+  private[floatx] var p31: Float = _
+  private[floatx] var p32: Float = _
 }

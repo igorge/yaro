@@ -6,6 +6,7 @@ trait RichUniformTrait { this: Context =>
 
   trait UniformTrait {
     var location: GLUniformLocation
+    @inline def get = location
   }
 
   class Uniform extends UniformTrait {
