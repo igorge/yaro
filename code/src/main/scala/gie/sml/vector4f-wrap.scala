@@ -1,8 +1,7 @@
 package gie.sml
 
-import scala.collection.mutable
 
-class VectorRead4FWrap(val buffer: IndexedSeq[Float]) extends VectorRead4F
+class VectorRead4FWrap(val buffer: Array[Float]) extends VectorRead4F
   with VectorRead4FImplViaIndexAccess
 {
 
@@ -12,7 +11,7 @@ class VectorRead4FWrap(val buffer: IndexedSeq[Float]) extends VectorRead4F
 
 }
 
-class VectorWrite4FWrap(val buffer: mutable.IndexedSeq[Float]) extends Vector4FMutable
+class VectorWrite4FWrap(val buffer: Array[Float]) extends Vector4FMutable
   with VectorRead4FImplViaIndexAccess
   with VectorWrite4FImplViaIndexAccess
 {
