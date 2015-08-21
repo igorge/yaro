@@ -8,6 +8,8 @@ scalacOptions := Seq("-optimise", "-Xlint", "-unchecked", "-deprecation", "-enco
 
 enablePlugins(ScalaJSPlugin)
 
+//scalaJSSemantics ~= { _.withStrictFloats(false) }
+
 //unmanagedSourceDirectories in Compile += baseDirectory.value / "../shared"
 
 //libraryDependencies += "biz.enef" %%% "scalajs-angulate" % "0.2.1"
