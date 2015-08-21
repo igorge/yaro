@@ -21,6 +21,7 @@ libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0"
 
 jsDependencies += ProvidedJS / "rAF.js"
 
+jsDependencies += RuntimeDOM
 
 //jsDependencies += "org.webjars" % "angularjs" % "1.4.3" / "angular.min.js"
 
@@ -37,6 +38,11 @@ jsDependencies += ProvidedJS / "rAF.js"
 //jsDependencies += ProvidedJS / "ui-bootstrap.min.js" dependsOn ("angular.min.js","bootstrap.min.js")
 
 //jsDependencies += ProvidedJS / "angular-tree-control.js" dependsOn ("angular.min.js","bootstrap.min.js")
+
+
+libraryDependencies += "com.lihaoyi" %%% "utest" % "0.3.1" % "test"
+
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 persistLauncher in Compile := true
 skip in packageJSDependencies := false
