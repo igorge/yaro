@@ -162,6 +162,7 @@ object app extends JSApp with LazyLogging {
 
       def tick(oldTime: Long)(t:Double): Unit ={
         import gie.sml._
+        import gie.sml.ImplicitOps._
 
         val currentTimeNano = System.nanoTime()
 

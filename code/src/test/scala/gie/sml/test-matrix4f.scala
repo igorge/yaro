@@ -2,6 +2,7 @@ package gie.sml.ut
 
 import utest._
 import gie.sml._
+import gie.sml.ImplicitOps._
 
 import scala.util.Random
 

@@ -26,6 +26,19 @@ trait MatrixRead4F {
   def m32: Float
   def m33: Float
 
+  override def equals(other: Any): Boolean = other match {
+    case m2:MatrixRead4F =>
+      m00 == m2.m00 && m01 == m2.m01 && m02 == m2.m02 && m03 == m2.m03 &&
+      m10 == m2.m10 && m11 == m2.m11 && m12 == m2.m12 && m13 == m2.m13 &&
+      m20 == m2.m20 && m21 == m2.m21 && m22 == m2.m22 && m23 == m2.m23 &&
+      m30 == m2.m30 && m31 == m2.m31 && m32 == m2.m32 && m33 == m2.m33
+    case _ => false
+  }
+
+  override def toString():String = {
+    s"[${m00}, ${m01}, ${m02}, ${m03}], [${m10}, ${m11}, ${m12}, ${m13}], [${m20}, ${m21}, ${m22}, ${m23}], [${m30}, ${m31}, ${m32}, ${m33}]"
+  }
+
 }
 
 trait MatrixWrite4F extends MatrixRead4F{
