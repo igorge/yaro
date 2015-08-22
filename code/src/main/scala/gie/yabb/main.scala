@@ -65,7 +65,7 @@ object shaderSource {
       |
       |void main() {
       |   v_color = vec4(a_color, 1);
-      |   gl_Position = vec4(a_position, 1);
+      |   gl_Position = u_mv*vec4(a_position, 1);
       |}
       |
     """.stripMargin
@@ -85,6 +85,9 @@ object shaderSource {
 
 object app extends JSApp with LazyLogging {
 
+  final val NANOS_IN_SEC      = 1000000000L
+  final val NANOS_IN_MILLISEC = 1000000L
+
   def main(): Unit = {
 
     LoggerConfig.factory = ConsoleLoggerFactory
@@ -101,7 +104,7 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.SML_Matrix4F
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -113,7 +116,7 @@ object app extends JSApp with LazyLogging {
 
       val mapToLocations = gl.nameToLocationsMaps()
 
-      //val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
 //      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
 //      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
@@ -155,26 +158,39 @@ object app extends JSApp with LazyLogging {
 
       gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
 
-      def tick(t:Double): Unit ={
+      var angle = 0f
 
-        dom.window.requestAnimationFrame(tick _)
+      def tick(oldTime: Long)(t:Double): Unit ={
+        import gie.sml._
+
+        val currentTimeNano = System.nanoTime()
+
+        dom.window.requestAnimationFrame(tick(currentTimeNano) _)
+
+        val delta:Double  = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
 
         gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
 
         a_position.enable()
         a_color.enable()
 
+        val m = Matrix4F.identity()
+        val rotZ = Matrix4F.zero()
+
+        angle+=(delta*1).toFloat
+        rotZ.rotZ_!(angle)
+
 //        val m = Mat4.apply(
 //          Mat4x3
 //            translate( Vec3(0.5f, 0, 0) )             //rotateZ(radians(12))
 //        )
-//        gl.uniformMatrix4fv(u_mv.get, true, m)
+        gl.uniformMatrix4fv(u_mv.get, false, m*rotZ)
 
 
         gl.drawArrays(gl.const.TRIANGLES, 0, 6)
       }
 
-      tick(0)
+      tick(System.nanoTime())(0)
 
     })
 

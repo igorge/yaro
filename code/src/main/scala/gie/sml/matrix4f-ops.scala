@@ -156,7 +156,80 @@ trait Matrix4FThisWriteOps extends  Matrix4FThisReadOps { this: MatrixWrite4F =>
     m33 = tmp33
   }
 
+  @inline final def rotX_! (angle: Float): Unit={
+    val c: Float = Math.cos(angle).asInstanceOf[Float]
+    val s: Float = Math.sin(angle).asInstanceOf[Float]
 
+    m00 = 1.0f
+    m01 = 0.0f
+    m02 = 0.0f
+    m03 = 0.0f
+
+    m10 = 0.0f
+    m11 = c
+    m12 = -s
+    m13 = 0.0f
+
+    m20 = 0.0f
+    m21 = s
+    m22 = c
+    m23 = 0.0f
+
+    m30 = 0.0f
+    m31 = 0.0f
+    m32 = 0.0f
+    m33 = 1.0f
+  }
+
+  def rotY_! (angle: Float): Unit={
+    val c: Float = Math.cos(angle).asInstanceOf[Float]
+    val s: Float = Math.sin(angle).asInstanceOf[Float]
+
+    m00 = c
+    m01 = 0.0f
+    m02 = s
+    m03 = 0.0f
+
+    m10 = 0.0f
+    m11 = 1.0f
+    m12 = 0.0f
+    m13 = 0.0f
+
+    m20 = -s
+    m21 = 0.0f
+    m22 = c
+    m23 = 0.0f
+
+    m30 = 0.0f
+    m31 = 0.0f
+    m32 = 0.0f
+    m33 = 1.0f
+  }
+
+  @inline final def rotZ_!(angle: Float): Unit={
+    val c: Float = Math.cos(angle).asInstanceOf[Float]
+    val s: Float = Math.sin(angle).asInstanceOf[Float]
+
+    m00 = c
+    m01 = -s
+    m02 = 0.0f
+    m03 = 0.0f
+
+    m10 = s
+    m11 = c
+    m12 = 0.0f
+    m13 = 0.0f
+
+    m20 = 0.0f
+    m21 = 0.0f
+    m22 = 1.0f
+    m23 = 0.0f
+
+    m30 = 0.0f
+    m31 = 0.0f
+    m32 = 0.0f
+    m33 = 1.0f
+  }
 }
 
 
