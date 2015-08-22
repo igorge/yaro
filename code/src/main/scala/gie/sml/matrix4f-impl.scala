@@ -7,7 +7,6 @@ class Matrix4F (
   var m_m30: Float, var m_m31: Float, var m_m32: Float, var m_m33: Float)
 
   extends MatrixWrite4F
-  with Matrix4FThisReadOps
 {
 
   //first line
