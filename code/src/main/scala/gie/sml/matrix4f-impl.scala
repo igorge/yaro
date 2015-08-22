@@ -59,7 +59,7 @@ class Matrix4F (
   
 }
 
-object Matrix4F {
+object Matrix4F extends Matrix4FGenOps {
   
   @inline def apply(
     m00: Float, m01: Float, m02: Float, m03: Float,
