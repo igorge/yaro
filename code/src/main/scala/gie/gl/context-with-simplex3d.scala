@@ -24,3 +24,18 @@ trait SML_Matrix4F { this: Context=>
 
 
 }
+
+trait SML_Matrix4FRich extends SML_Matrix4F {
+  this: Context with RichContext =>
+
+
+  @inline final def setUniformMatrix(location: UniformTrait, m: MatrixRead4F, transpose: Boolean = false): Unit={
+    uniformMatrix4fv(location.get, transpose, m)
+  }
+
+  object uniformMatrix {
+    @inline final def update(location: UniformTrait, m: MatrixRead4F) = setUniformMatrix(location, m)
+  }
+
+
+}
