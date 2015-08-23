@@ -302,6 +302,7 @@ trait Context {
 
   @inline final def uniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit={
     impl_glUniformMatrix4fv(location, transpose, v)
+    checkGlError()
   }
 
   @inline final def drawArrays(mode: Int, first: Int, count: Int): Unit={
