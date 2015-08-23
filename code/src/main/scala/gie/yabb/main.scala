@@ -57,6 +57,7 @@ object shaderSource {
       |invariant gl_Position;
       |
       |uniform mat4 u_mv;
+      |uniform mat4 u_projection;
       |
       |attribute vec3 a_color;
       |attribute vec3 a_position;
@@ -65,7 +66,7 @@ object shaderSource {
       |
       |void main() {
       |   v_color = vec4(a_color, 1);
-      |   gl_Position = u_mv*vec4(a_position, 1);
+      |   gl_Position = u_projection*u_mv*vec4(a_position, 1);
       |}
       |
     """.stripMargin
@@ -89,6 +90,8 @@ object app extends JSApp with LazyLogging {
   final val NANOS_IN_MILLISEC = 1000000L
 
   def main(): Unit = {
+    import gie.sml._
+    import gie.sml.ImplicitOps._
 
     LoggerConfig.factory = ConsoleLoggerFactory
     LoggerConfig.level = LogLevel.TRACE
@@ -117,7 +120,7 @@ object app extends JSApp with LazyLogging {
       val mapToLocations = gl.nameToLocationsMaps()
 
       val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-//      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
 //      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
       val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
@@ -147,6 +150,9 @@ object app extends JSApp with LazyLogging {
 
       program.use()
 
+      val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+      gl.uniformMatrix4fv(u_projection.get, false, projection)
+
       a_position
         .bindBuffer(squareBuffer)
         .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
@@ -161,8 +167,6 @@ object app extends JSApp with LazyLogging {
       var angle = 0f
 
       def tick(oldTime: Long)(t:Double): Unit ={
-        import gie.sml._
-        import gie.sml.ImplicitOps._
 
         val currentTimeNano = System.nanoTime()
 
@@ -179,13 +183,12 @@ object app extends JSApp with LazyLogging {
         val rotZ = Matrix4F.zero()
 
         angle+=(delta*1).toFloat
-        rotZ.rotZ_!(angle)
 
 //        val m = Mat4.apply(
 //          Mat4x3
 //            translate( Vec3(0.5f, 0, 0) )             //rotateZ(radians(12))
 //        )
-        gl.uniformMatrix4fv(u_mv.get, false, m*rotZ)
+        gl.uniformMatrix4fv(u_mv.get, false, m*Matrix4F.rotZ(angle))
 
 
         gl.drawArrays(gl.const.TRIANGLES, 0, 6)

@@ -197,6 +197,67 @@ object Matrix4FOps extends TestSuite {
       assert(m1-m2 == m3)
     }
 
+    'Transpose {
+
+      val m1 = Matrix4F(
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16)
+
+      val m1Copy = m1.copy()
+
+      val m1Transpose = m1.transpose()
+
+      val m2Ref = Matrix4F(
+        1,5,9,13,
+        2,6,10,14,
+        3,7,11,15,
+        4,8,12,16)
+
+      assert(m1Transpose==m2Ref, m1==m1Copy)
+
+    }
+
+    'TransposeSelf {
+
+      val m1 = Matrix4F(
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16)
+
+      val m2Ref = Matrix4F(
+        1,5,9,13,
+        2,6,10,14,
+        3,7,11,15,
+        4,8,12,16)
+
+      m1.transpose_!()
+
+      assert(m1==m2Ref)
+
+    }
+
+    'TransposeEq {
+
+      val m1 = Matrix4F(
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9,  10, 11, 12,
+        13, 14, 15, 16)
+
+      val m1Copy = m1.copy()
+
+      val m1Transpose = m1.transpose()
+
+      val m2Ref = m1.copy()
+      m2Ref.transpose_!()
+
+      assert(m1Transpose==m2Ref, m1==m1Copy)
+
+    }
+
     'Mul {
       val m1 = Matrix4F(
         1,  2,  3,  4,
@@ -289,6 +350,41 @@ object Matrix4FOps extends TestSuite {
 
       assert(m1copy == m1_times_m2)
     }
+
+    'RotXSelfvsRotGen {
+      val angle = 15.0*math.Pi/180 toFloat
+      val m1 = Matrix4F.zero()
+
+      m1.rotX_!(angle)
+
+      val m2 = Matrix4F.rotX(angle)
+
+      assert(m1==m2)
+    }
+
+    'RotYSelfvsRotGen {
+      val angle = 15.0*math.Pi/180 toFloat
+      val m1 = Matrix4F.zero()
+
+      m1.rotY_!(angle)
+
+      val m2 = Matrix4F.rotY(angle)
+
+      assert(m1==m2)
+    }
+
+
+    'RotZSelfvsRotGen {
+      val angle = 15.0*math.Pi/180 toFloat
+      val m1 = Matrix4F.zero()
+
+      m1.rotZ_!(angle)
+
+      val m2 = Matrix4F.rotZ(angle)
+
+      assert(m1==m2)
+    }
+
 
   }
 

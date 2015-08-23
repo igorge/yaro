@@ -27,6 +27,15 @@ object ImplicitOps {
       case 3 => row3
     }
 
+    @inline final def transpose(): Matrix4F={
+      Matrix4F(
+        m00, m10, m20, m30,
+        m01, m11, m21, m31,
+        m02, m12, m22, m32,
+        m03, m13, m23, m33)
+    }
+
+
     @inline final def +(m2: MatrixRead4F): Matrix4F = {
       Matrix4F(
         m00+m2.m00, m01+m2.m01, m02+m2.m02, m03+m2.m03,
@@ -72,6 +81,32 @@ object ImplicitOps {
   implicit class Matrix4FThisWriteOps(val m: MatrixWrite4F) extends AnyVal {
 
     import m._
+
+    @inline final def transpose_!(): Unit={
+      var tmp = m01
+      m01 = m10
+      m10 = tmp
+
+      tmp = m02
+      m02 = m20
+      m20 = tmp
+
+      tmp = m03
+      m03 = m30
+      m30 = tmp
+
+      tmp = m12
+      m12 = m21
+      m21 = tmp
+
+      tmp = m13
+      m13 = m31
+      m31 = tmp
+
+      tmp = m23
+      m23 = m32
+      m32 = tmp
+    }
 
     @inline final def mul_!(m2: MatrixRead4F): Unit = {
 

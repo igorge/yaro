@@ -88,4 +88,14 @@ object Matrix4F extends Matrix4FGenOps {
     0,  0,  0,  0
   )
 
+  //
+  // Generate right handed default opengl ortho projection matrix
+  // Note: NDC are left handed
+  //
+  final def ortho(l: Float, r: Float, b: Float, t: Float, n: Float, f: Float)= Matrix4F(
+    2/(r-l),  0,         0,     -(r+l)/(r-l),
+      0,    2/(t-b),     0,     -(t+b)/(t-b),
+      0,      0,      -2/(f-n), -(f+n)/(f-n),
+      0,      0,         0,           1    )
+
 }
