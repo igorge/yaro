@@ -37,6 +37,18 @@ trait ContextUnbind {
   @inline def bindNullBuffer(target: Int): Unit={
     gl.bindBuffer(target, gl.buffer_null)
   }
+
+  @inline def bindNullTexture(target: Int): Unit={
+    gl.bindTexture(target, gl.texture_null)
+  }
+
+  @inline final def withBoundTexture[T](target: Int, texture: GLTexture)(fun: GLTexture=>T): T = {
+    gl.bindTexture(target, texture)
+    val r = fun(texture)
+    bindNullTexture(target)
+    r
+  }
+
 }
 
 trait Context {
@@ -55,7 +67,10 @@ trait Context {
   def program_null_?(x: GLProgram): Boolean
 
   def buffer_null: GLBuffer
-  def buffer_null_?(x: GLProgram): Boolean
+  def buffer_null_?(x: GLBuffer): Boolean
+
+  def texture_null: GLTexture
+  def texture_null_?(x: GLTexture): Boolean
 
   @inline final def vertexAttributeLocation_null: GLVertexAttributeLocation = -1
   @inline final def vertexAttributeLocation_null_?(x: GLVertexAttributeLocation): Boolean = x == -1

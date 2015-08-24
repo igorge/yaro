@@ -5,6 +5,7 @@ import slogging._
 
 
 import scala.scalajs.js.JSApp
+import scala.scalajs.js.typedarray.Uint8Array
 
 import scalajs.js
 import org.scalajs.dom
@@ -107,7 +108,24 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.SML_Matrix4F
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.SML_Matrix4FRich {
+        //@inline override def checkGlError(): Unit = { /*noop*/ }
+      }
+
+
+      def createSolidTexture(r: Float, g: Float, b: Float, a: Float)={
+
+        val datat=Array[Float](r,g,b,a)
+        gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
+          //gl.texI
+        }
+
+      }
+
+      val tex1 = createSolidTexture(1,0,0,1)
+
+      logger.debug(s"${tex1}")
+
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -150,8 +168,10 @@ object app extends JSApp with LazyLogging {
 
       program.use()
 
+      logger.debug("nononon")
+
       val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
-      gl.uniformMatrix4fv(u_projection.get, false, projection)
+      gl.uniformMatrix(u_projection) = projection
 
       a_position
         .bindBuffer(squareBuffer)

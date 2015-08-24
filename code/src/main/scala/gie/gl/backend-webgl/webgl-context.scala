@@ -1,7 +1,7 @@
 package gie.gl
 
 import org.scalajs.dom
-import scala.scalajs.js.typedarray.Float32Array
+import scalajs.js.typedarray._
 import scalajs.js
 
 
@@ -52,7 +52,10 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   @inline final def program_null_?(x: GLProgram): Boolean = x eq null
 
   @inline final def buffer_null: GLBuffer = null
-  @inline final def buffer_null_?(x: GLProgram): Boolean = x eq null
+  @inline final def buffer_null_?(x: GLBuffer): Boolean = x eq null
+
+  @inline final def texture_null: GLTexture = null
+  @inline final def texture_null_?(x: GLTexture): Boolean = x eq null
 
 
   // ctor
@@ -170,13 +173,21 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
 
   @inline final def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit={
-    import js.JSConverters._
-    real.bufferData(target, new Float32Array(data.toJSArray), usage)  // XXX: slow?
+    real.bufferData(target, data.toTypedArray, usage)  // XXX: slow?
   }
 
+
   @inline final def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit={
-    import js.JSConverters._
-    real.bufferData(target, new Float32Array(data.toJSArray), usage)  // XXX: slow?
+    val len = data.size
+    val dest = new Float32Array(len)
+
+    var i = 0
+    while (i < len) {
+      dest(i) = data(i)
+      i += 1
+    }
+
+    real.bufferData(target, dest, usage)  // XXX: slow?
   }
 
 
@@ -248,6 +259,10 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
   @inline final def impl_glTexParameteri(target: Int, pname: Int, param: Int): Unit={
     real.texParameteri(target, pname, param)
+  }
+
+  @inline final def impl_glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, `type`: Int, pixels: Array[Byte]): Unit={
+    real.texImage2D(target, level, internalformat,  width, height, border, format, `type`, pixels.toTypedArray)
   }
 
 }
