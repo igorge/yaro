@@ -61,12 +61,15 @@ object shaderSource {
       |uniform mat4 u_projection;
       |
       |attribute vec3 a_color;
+      |attribute vec2 a_tex_coordinate;
       |attribute vec3 a_position;
       |
       |varying vec4 v_color;
+      |varying vec2 v_tex_coordinate;
       |
       |void main() {
       |   v_color = vec4(a_color, 1);
+      |   v_tex_coordinate = a_tex_coordinate;
       |   gl_Position = u_projection*u_mv*vec4(a_position, 1);
       |}
       |
@@ -77,9 +80,12 @@ object shaderSource {
       |precision mediump float;
       |
       |varying vec4 v_color;
+      |varying vec2 v_tex_coordinate;
+      |
+      |uniform sampler2D u_texture;
       |
       |void main() {
-      |   gl_FragColor = v_color;
+      |   gl_FragColor = texture2D(u_texture, v_tex_coordinate);
       |}
       |
     """.stripMargin
@@ -113,22 +119,28 @@ object app extends JSApp with LazyLogging {
       }
 
 
-      def createSolidTexture(r: Float, g: Float, b: Float, a: Float)={
+      def createSolidTexture(r: Byte, g: Byte, b: Byte, a: Byte)={
 
-        val datat=Array[Float](r,g,b,a)
+        val data=Array[Byte](r,g,b,a ,0,-1,0,-1)
         gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
-          //gl.texI
+          gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, 2, 1, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
+
+          texture
         }
 
       }
 
-      val tex1 = createSolidTexture(1,0,0,1)
-
-      logger.debug(s"${tex1}")
-
+      val tex1 = createSolidTexture(-1,0,0,-1)
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
+      val squareTexCoord = gl.createBuffer(
+        target = gl.const.ARRAY_BUFFER,
+        usage = gl.const.STATIC_DRAW,
+        data = geom._2
+      )
       val squareColors = gl.createBuffer(
         target = gl.const.ARRAY_BUFFER,
         usage = gl.const.STATIC_DRAW,
@@ -139,11 +151,11 @@ object app extends JSApp with LazyLogging {
 
       val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
       val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
-//      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
       val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
       val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
-//      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
       val program = gl.Program()
 
@@ -168,7 +180,8 @@ object app extends JSApp with LazyLogging {
 
       program.use()
 
-      logger.debug("nononon")
+      gl.enable(gl.const.BLEND)
+      gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)
 
       val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
       gl.uniformMatrix(u_projection) = projection
@@ -181,10 +194,18 @@ object app extends JSApp with LazyLogging {
         .bindBuffer(squareColors)
         .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
+      a_tex_coordinate
+        .bindBuffer(squareTexCoord)
+        .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
+
 
       gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
 
       var angle = 0f
+
+      gl.uniform(u_texture) = 0
+      gl.activateTexture(gl.const.TEXTURE0)
+      gl.bindTexture(gl.const.TEXTURE_2D, tex1)
 
       def tick(oldTime: Long)(t:Double): Unit ={
 
@@ -198,18 +219,14 @@ object app extends JSApp with LazyLogging {
 
         a_position.enable()
         a_color.enable()
+        a_tex_coordinate.enable()
 
         val m = Matrix4F.identity()
         val rotZ = Matrix4F.zero()
 
         angle+=(delta*1).toFloat
 
-//        val m = Mat4.apply(
-//          Mat4x3
-//            translate( Vec3(0.5f, 0, 0) )             //rotateZ(radians(12))
-//        )
-        gl.uniformMatrix4fv(u_mv.get, false, m*Matrix4F.rotZ(angle))
-
+        gl.uniformMatrix(u_mv) = m*Matrix4F.rotZ(angle)
 
         gl.drawArrays(gl.const.TRIANGLES, 0, 6)
       }
@@ -217,10 +234,6 @@ object app extends JSApp with LazyLogging {
       tick(System.nanoTime())(0)
 
     })
-
-    //val m2 = Mat2(1, 2, 3, 4)
-//    val model = Mat4x3.scale(Vec3(1, 1, 3)) rotateZ(radians(45)) translate(Vec3(10, 5, 10))
-
 
 
   }

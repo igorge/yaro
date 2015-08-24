@@ -29,6 +29,17 @@ trait Constants {
   val DYNAMIC_DRAW: Int
   val STREAM_DRAW: Int
   val FLOAT: Int
+  val RGB: Int
+  val RGBA: Int
+  val BYTE: Int
+  val UNSIGNED_BYTE: Int
+  val TEXTURE_MAG_FILTER: Int
+  val TEXTURE_MIN_FILTER: Int
+  val NEAREST: Int
+  val BLEND: Int
+  val ONE: Int
+  val SRC_ALPHA: Int
+  val ONE_MINUS_SRC_ALPHA: Int
 }
 
 trait ContextUnbind {
@@ -122,6 +133,7 @@ trait Context {
   def impl_glBindTexture(target: Int, texture: GLTexture): Unit
   def impl_glTexParameterf(target: Int, pname: Int, param: Float): Unit
   def impl_glTexParameteri(target: Int, pname: Int, param: Int): Unit
+  def impl_glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, `type`: Int, pixels: Array[Byte]): Unit
 
 
   def currentProgram(): GLProgram
@@ -359,6 +371,11 @@ trait Context {
 
   @inline final def texParameter(target: Int, pname: Int, param: Int): Unit={
     impl_glTexParameteri(target, pname, param)
+    checkGlError()
+  }
+
+  @inline final def texImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, `type`: Int, pixels: Array[Byte]): Unit={
+    impl_glTexImage2D(target, level, internalformat, width, height, border, format, `type`, pixels)
     checkGlError()
   }
 

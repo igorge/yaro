@@ -1,6 +1,7 @@
 package gie.gl
 
 import org.scalajs.dom
+import scala.scalajs.js.JSConverters.genTravConvertible2JSRichGenTrav
 import scalajs.js.typedarray._
 import scalajs.js
 
@@ -34,6 +35,17 @@ object WebGLContext extends Constants {
   final val DYNAMIC_DRAW: Int = dom.raw.WebGLRenderingContext.DYNAMIC_DRAW
   final val STREAM_DRAW: Int = dom.raw.WebGLRenderingContext.STREAM_DRAW
   final val FLOAT: Int = dom.raw.WebGLRenderingContext.FLOAT
+  final val RGB: Int = dom.raw.WebGLRenderingContext.RGB
+  final val RGBA: Int = dom.raw.WebGLRenderingContext.RGBA
+  final val BYTE: Int = dom.raw.WebGLRenderingContext.BYTE
+  final val UNSIGNED_BYTE: Int = dom.raw.WebGLRenderingContext.UNSIGNED_BYTE
+  final val TEXTURE_MAG_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MAG_FILTER
+  final val TEXTURE_MIN_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MIN_FILTER
+  final val NEAREST: Int = dom.raw.WebGLRenderingContext.NEAREST
+  final val BLEND: Int = dom.raw.WebGLRenderingContext.BLEND
+  final val ONE: Int = dom.raw.WebGLRenderingContext.ONE
+  final val SRC_ALPHA: Int = dom.raw.WebGLRenderingContext.SRC_ALPHA
+  final val ONE_MINUS_SRC_ALPHA: Int = dom.raw.WebGLRenderingContext.ONE_MINUS_SRC_ALPHA
 
 }
 
@@ -178,6 +190,7 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
 
   @inline final def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit={
+
     val len = data.size
     val dest = new Float32Array(len)
 
@@ -262,7 +275,17 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   }
 
   @inline final def impl_glTexImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, `type`: Int, pixels: Array[Byte]): Unit={
-    real.texImage2D(target, level, internalformat,  width, height, border, format, `type`, pixels.toTypedArray)
+
+    val len = pixels.size
+    val dest = new Uint8Array(len)
+
+    var i = 0
+    while (i < len) {
+      dest(i) = pixels(i)
+      i += 1
+    }
+
+    real.texImage2D(target, level, internalformat,  width, height, border, format, `type`, dest)
   }
 
 }

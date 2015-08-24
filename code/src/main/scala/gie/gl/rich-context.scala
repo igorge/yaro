@@ -38,5 +38,9 @@ trait RichContext
   with    RichContextCommon {
   this: Context with ContextUnbind =>
 
+  object uniform {
+    @inline final def update(location: UniformTrait, v:Int) = uniform1i(location.get, v)
+  }
+
 
 }
