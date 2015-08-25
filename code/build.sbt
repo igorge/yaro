@@ -21,6 +21,10 @@ libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.3.4"
 
 libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0"
 
+libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.0.9"
+
+libraryDependencies += "org.scodec" %%% "scodec-core" % "1.8.1"
+
 jsDependencies += ProvidedJS / "rAF.js"
 
 jsDependencies += RuntimeDOM

@@ -1,14 +1,48 @@
 package gie.yaro
 
 
+import gie.jsutils.XMLHttpRequestFuture
 import slogging._
 
 
+import scala.concurrent.ExecutionContext
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.typedarray.Uint8Array
 
 import scalajs.js
 import org.scalajs.dom
+
+
+object RoStore extends LazyLogging {
+
+  import app.executionContext
+
+
+  val prefix = s"${dom.location.origin}/"
+
+  def open(path: String) = {
+    val url = s"${prefix}${path}"
+
+    logger.debug(url)
+
+    val xhr = new dom.XMLHttpRequest()
+
+    val f = new XMLHttpRequestFuture(xhr, Some(XMLHttpRequestFuture.responseType.arrayBuffer))
+
+    f.onSuccess{
+      case v=> println(s"GOT: ${v}")
+    }
+    f.onComplete{
+      case v => v.get
+    }
+
+    xhr.open("GET", url)
+    xhr.send()
+
+  }
+
+}
+
 
 object shaderSource {
 
@@ -93,6 +127,9 @@ object shaderSource {
 
 object app extends JSApp with LazyLogging {
 
+  implicit val executionContext:ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
+
   final val NANOS_IN_SEC      = 1000000000L
   final val NANOS_IN_MILLISEC = 1000000L
 
@@ -106,6 +143,8 @@ object app extends JSApp with LazyLogging {
     logger.info("gie.yaro.app.main()")
 
     //dom.alert("Hi from Scala-js-dom")
+
+    rsm.file.codec.test()
 
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
@@ -239,4 +278,7 @@ object app extends JSApp with LazyLogging {
   }
 
 }
+
+
+
 
