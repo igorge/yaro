@@ -58,9 +58,6 @@ class XMLHttpRequestFuture(wrapped: dom.XMLHttpRequest, responseType: Option[Str
   }
 
   private def impl_decodeResponse(): T ={
-    println(s"response type is: '${wrapped.responseType}'")
-    println(s"${wrapped.response}")
-
     wrapped.response
   }
 

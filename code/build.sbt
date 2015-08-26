@@ -25,6 +25,8 @@ libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.0.9"
 
 libraryDependencies += "org.scodec" %%% "scodec-core" % "1.8.1"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.5"
+
 jsDependencies += ProvidedJS / "rAF.js"
 
 jsDependencies += RuntimeDOM

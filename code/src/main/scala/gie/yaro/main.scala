@@ -5,9 +5,10 @@ import gie.jsutils.XMLHttpRequestFuture
 import slogging._
 
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.scalajs.js.JSApp
-import scala.scalajs.js.typedarray.Uint8Array
+import scala.scalajs.js.typedarray.{Int8Array, ArrayBuffer, Uint8Array}
 
 import scalajs.js
 import org.scalajs.dom
@@ -29,16 +30,16 @@ object RoStore extends LazyLogging {
 
     val f = new XMLHttpRequestFuture(xhr, Some(XMLHttpRequestFuture.responseType.arrayBuffer))
 
-    f.onSuccess{
-      case v=> println(s"GOT: ${v}")
-    }
-    f.onComplete{
-      case v => v.get
-    }
-
     xhr.open("GET", url)
     xhr.send()
 
+    f.map{ r=>
+      val buffer = new Int8Array ( r.asInstanceOf[ArrayBuffer] )
+      new IndexedSeq[Byte] {
+        def length = buffer.length
+        def apply(idx: Int) = buffer(idx)
+      }
+    }
   }
 
 }
