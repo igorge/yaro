@@ -41,9 +41,32 @@ object codec extends LazyLogging {
   val alphaValue = ("alpha" | uint8 )
   val reserved = ("reserved" | bytes(16) )  xmap (_.toArray, ByteVector(_:Array[Byte]))
 
+  def fixedString(size: Int) = ("fixed_string" | bytes(size) ) xmap( impl_fixedString_bytesToString _, impl_fixedString_stringToBytes(_: String, size) )
+
+  def impl_fixedString_bytesToString(data: ByteVector): String= {
+    assume(data.size!=0)
+    new String( data.takeWhile(_!=0).toArray )//, "euc-kr" )
+  }
+
+  def impl_fixedString_stringToBytes(data: String, size: Int): ByteVector ={
+    assume(data.size>0)
+    assume(data.size<=size)
+
+    ???
+  }
+
   val header ={
     rsmMagic ~> version :: animationLength :: shaderType :: alphaValue :: reserved
   }.as[Header]
+
+  val textureNames ={
+    ("textures_names" | vectorOfN(int32L, fixedString(40)))
+
+  }
+
+  val file = {
+    header :: textureNames
+  }
 
 
 
@@ -52,7 +75,11 @@ object codec extends LazyLogging {
 
     async {
 
-      val r = header.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
+      gie.codeset.TableMap.parse( await(RoStore.open("ro-data-unpacked/KOREAN.TXT")) )
+
+       //gie.codeset.TableMap.parse( await(RoStore.open("ro-data-unpacked/test.txt")) )
+
+      val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
 
       println(s"result >> ${r}")
 
