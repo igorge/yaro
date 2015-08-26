@@ -9,6 +9,8 @@ import implicits._
 import slogging.LazyLogging
 
 import scala.concurrent.ExecutionContext
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters.array2JSRichGenTrav
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 import scala.async.Async.{async, await}
 
@@ -25,6 +27,13 @@ case class Header(
 
 object codec extends LazyLogging {
 
+  private val iconv = gie.Require.require("iconv-lite")
+  private val bufferCtor = gie.Require.require("buffer").asInstanceOf[js.Dynamic].Buffer
+
+  private def fromEucKr(data: Array[Byte]): String = {
+    val buffer = bufferCtor.apply(data.toJSArray)
+    iconv.asInstanceOf[js.Dynamic].decode(buffer, "euc-kr").asInstanceOf[String]
+  }
 
 
   val rsmMagic = {
@@ -45,7 +54,7 @@ object codec extends LazyLogging {
 
   def impl_fixedString_bytesToString(data: ByteVector): String= {
     assume(data.size!=0)
-    new String( data.takeWhile(_!=0).toArray )//, "euc-kr" )
+    fromEucKr( data.takeWhile(_!=0).toArray )
   }
 
   def impl_fixedString_stringToBytes(data: String, size: Int): ByteVector ={

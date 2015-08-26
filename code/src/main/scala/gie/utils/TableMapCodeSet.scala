@@ -9,3 +9,4 @@ object Require extends js.GlobalScope {
    def require(v: String): js.Object = js.native
 
 }
+
