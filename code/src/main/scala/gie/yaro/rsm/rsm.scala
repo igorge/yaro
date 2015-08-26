@@ -73,9 +73,13 @@ object codec extends LazyLogging {
   def test()(implicit executor: ExecutionContext): Unit = {
     logger.debug("codec.test()")
 
+    val iconv = gie.Require.require("iconv-lite")
+
+    println(s">>> ${iconv}")
+
     async {
 
-      gie.codeset.TableMap.parse( await(RoStore.open("ro-data-unpacked/KOREAN.TXT")) )
+      //gie.codeset.TableMap.parse( await(RoStore.open("ro-data-unpacked/KOREAN.TXT")) )
 
        //gie.codeset.TableMap.parse( await(RoStore.open("ro-data-unpacked/test.txt")) )
 

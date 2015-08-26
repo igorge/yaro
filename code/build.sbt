@@ -31,6 +31,8 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.5"
 
 jsDependencies += ProvidedJS / "rAF.js"
 
+jsDependencies += ProvidedJS / "iconv-lite.js"
+
 jsDependencies += RuntimeDOM
 
 //jsDependencies += "org.webjars" % "angularjs" % "1.4.3" / "angular.min.js"
