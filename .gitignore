@@ -6,4 +6,4 @@ local.properties
 proguard-sbt.txt
 .idea
 code/trace.db
-
+code/src/main/resources/node_modules
