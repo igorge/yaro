@@ -21,10 +21,38 @@ case class Header(
   animationlenghth: Long,
   shaderType: Long,
   alpha: Int,
-  reserved: Array[Byte] )
+  reserved: Vector[Byte] )
 {
   def havePositionalAnimation_?(): Boolean = version._1>1 || (version._1==1 && version._2>=5)
 }
+
+
+case class RotationalKeyFrame(frame: Int, rot:Quaternion)
+case class Vector3I(x: Int, y: Int, z:Int)
+case class Quaternion(qx: Float, qy: Float,qz: Float, qw: Float)
+
+case class TexColor(color: Int, u: Float, v: Float)
+
+case class Face( vertexIndex: Vector3I,
+                 texVertexIndex: Vector3I,
+                 textureId: Int,
+                 reserved_padding: Int,
+                 twoSide: Int,
+                 smoothGroup: Int )
+
+case class Node( name: String,
+                 parentNodeName: Option[String],
+                 texturesIds: Vector[Int],
+                 axisOrigin:Vector[Float],
+                 translation:Vector[Float],
+                 rotAngle: Float,
+                 rotAxis:Vector[Float],
+                 scale: Vector[Float],
+                 vertices: Vector[(Float, Float, Float)],
+                 texCoords: Vector[TexColor],
+                 faces: Vector[Face],
+                 rotationalAnimation: Vector[RotationalKeyFrame] )
+
 
 object codec extends LazyLogging {
   import FixedVectorCodec._
@@ -45,7 +73,7 @@ object codec extends LazyLogging {
   val animationLength = ("animation_length" | uint32L)
   val shaderType = ("shader_type" | uint32L)
   val alphaValue = ("alpha" | uint8 )
-  val reserved = ("reserved" | bytes(16) )  xmap (_.toArray, ByteVector(_:Array[Byte]))
+  val reserved = ("reserved" | fixedVectorCodec(16, byte) )
 
   val header ={
     rsmMagic  :~>: version :: animationLength :: shaderType :: alphaValue :: reserved
@@ -62,41 +90,33 @@ object codec extends LazyLogging {
 
   val textureId = ("texture_id" | int32L)
 
-  val texColor = { int32L.withContext("color") :: floatL.withContext("u") :: floatL.withContext("v") }.as[TexColor]
+  val texColor = {
+    int32L.withContext("color") ::
+    floatL.withContext("u") ::
+    floatL.withContext("v")
+  }.as[TexColor]
 
   val quaternion = {
     ("qx" | floatL) ::
     ("qy" | floatL) ::
     ("qz" | floatL) ::
     ("qw" | floatL)
-  }.as[(Float,Float,Float,Float)]
+  }.withContext("quaternion").as[Quaternion]
+
 
   val face = {
-    ("vertex_idx" | uint16L :: uint16L :: uint16L).as[(Int,Int,Int)] ::
-    ("texture_vertex_idx" | uint16L :: uint16L :: uint16L).as[(Int,Int,Int)] ::
+    ("vertex_idx" | uint16L :: uint16L :: uint16L).as[Vector3I] ::
+    ("texture_vertex_idx" | uint16L :: uint16L :: uint16L).as[Vector3I] ::
     ("texture_id" | uint16L) ::
     ("m_reserved_padding" | uint16L) ::
     ("two_side" | int32L) ::
     ("smooth_group" | int32L)
-  }
+  }.as[Face]
 
   val rotationalKeyFrame = {
     ("frame" | int32L) ::
     quaternion
-  }
-
-  case class TexColor(color: Int, u: Float, v: Float)
-  case class Node(
-    name: String,
-    parentNodeName: String,
-    texturesIds: Vector[Int],
-                   axisOrigin:Vector[Float],
-                   translation:Vector[Float],
-                   rotAngle: Float,
-                   rotAxis:Vector[Float],
-                   scale: Float,
-                   vertices: Vector[(Float, Float, Float)],
-                   texCoords: Vector[TexColor])
+  }.as[RotationalKeyFrame]
 
   val node ={
     ("node_name" | fixedString(40)) ::
@@ -105,14 +125,14 @@ object codec extends LazyLogging {
     ("axis_origin" | fixedVectorCodec(3*4, floatL) ) :: //3x4 matrix that identifies the axis and origin of this node
     ("translation" | fixedVectorCodec(3, floatL) ) ::
     ("rot_angle" | floatL ) :: // angle of rotation around the axis in radians
-    ("rot_axis" | fixedVectorCodec(3, floatL) ) ::
+    ("rot_axis" | fixedVectorCodec(3, floatL) )  ::
     ("scale" | fixedVectorCodec(3, floatL) ) ::
     ("vertices" | vectorOfN( int32L.withContext("num_of_vertices"), (floatL :: floatL :: floatL).as[(Float, Float, Float)])) ::
     ("texture_coordinates" | vectorOfN( int32L.withContext("num_of_tex_coords"), texColor)) ::
     ("faces" | vectorOfN( int32L.withContext("num_of_faces"), face)) ::
       /*:: positional animation if version >=1.5*/
     ("rotational_animation" | vectorOfN( int32L.withContext("num_of_key_frames"), rotationalKeyFrame))
-  }
+  }.as[Node]
 
   val nodes ={
     ("nodes" | vectorOfN(int32L, node))
