@@ -1,5 +1,6 @@
 package gie.yaro.rsm.file
 
+import gie.scodec.FixedVectorCodec
 import gie.yaro.RoStore
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
@@ -26,33 +27,14 @@ case class Header(
 }
 
 object codec extends LazyLogging {
+  import FixedVectorCodec._
+  import gie.yaro.FixedString._
+  import gie.yaro.emptyStringToOpt
 
-  private val iconv = gie.Require.require("iconv-lite")
-  private val bufferCtor = gie.Require.require("buffer").asInstanceOf[js.Dynamic].Buffer
-
-  private def fromEucKr(data: Array[Byte]): String = {
-    val buffer = bufferCtor.apply(data.toJSArray)
-    iconv.asInstanceOf[js.Dynamic].decode(buffer, "euc-kr").asInstanceOf[String]
-  }
-
-
-  class FixedVectorCodec[A](count: Int, codec: Codec[A]) extends Codec[Vector[A]] {
-
-    def sizeBound = codec.sizeBound * count
-
-    def encode(vector: Vector[A]) = Encoder.encodeSeq(codec)(vector)
-
-    def decode(buffer: BitVector) = Decoder.decodeCollect[Vector, A](codec, Some(count))(buffer)
-
-    override def toString = s"vector($codec)"
-
-  }
-
-  def fixedVectorCodec[A](count: Int, codec: Codec[A]):Codec[Vector[A]] = new FixedVectorCodec(count, codec)
-
+  implicit val iconv = makeIconv()
 
   val rsmMagic = {
-    "rsm_magic" | (constant('G') ~> constant('R') ~> constant('S') ~> constant('M'))
+    "rsm_magic" | (constant('G') :: constant('R') :: constant('S') :: constant('M')).as[Unit]
   }
 
   val version = {
@@ -65,32 +47,8 @@ object codec extends LazyLogging {
   val alphaValue = ("alpha" | uint8 )
   val reserved = ("reserved" | bytes(16) )  xmap (_.toArray, ByteVector(_:Array[Byte]))
 
-  def fixedString(size: Int) = ("fixed_string" | bytes(size) ) xmap( impl_fixedString_bytesToString _, impl_fixedString_stringToBytes(_: String, size) )
-
-  def impl_fixedString_bytesToString(data: ByteVector): String= {
-    assume(data.size!=0)
-    fromEucKr( data.takeWhile(_!=0).toArray )
-  }
-
-  def impl_fixedString_stringToBytes(data: String, size: Int): ByteVector ={
-    assume(data.size>0)
-    assume(data.size<=size)
-
-    ???
-  }
-
-  def emptyStringToOpt(c: Codec[String]):Codec[Option[String]] = {
-    c.xmap(
-      str=>if(str.isEmpty) None else Some(str),
-      _ match {
-          case Some(str) => str
-          case None => ""
-      }
-    )
-  }
-
   val header ={
-    rsmMagic ~> version :: animationLength :: shaderType :: alphaValue :: reserved
+    rsmMagic  :~>: version :: animationLength :: shaderType :: alphaValue :: reserved
   }.as[Header]
 
   val textureNames ={
@@ -104,24 +62,41 @@ object codec extends LazyLogging {
 
   val textureId = ("texture_id" | int32L)
 
-  val texColor = { int32L.withContext("color") :: floatL.withContext("u") :: floatL.withContext("v") }
+  val texColor = { int32L.withContext("color") :: floatL.withContext("u") :: floatL.withContext("v") }.as[TexColor]
+
+  val quaternion = {
+    ("qx" | floatL) ::
+    ("qy" | floatL) ::
+    ("qz" | floatL) ::
+    ("qw" | floatL)
+  }.as[(Float,Float,Float,Float)]
 
   val face = {
-    ("vertex_idx" | int16L :: int16L :: int16L) ::
-    ("texture_vertex_idx" | int16L :: int16L :: int16L) ::
-    ("texture_id" | int16L) ::
-    ("m_reserved_padding" | int16L) ::
+    ("vertex_idx" | uint16L :: uint16L :: uint16L).as[(Int,Int,Int)] ::
+    ("texture_vertex_idx" | uint16L :: uint16L :: uint16L).as[(Int,Int,Int)] ::
+    ("texture_id" | uint16L) ::
+    ("m_reserved_padding" | uint16L) ::
     ("two_side" | int32L) ::
     ("smooth_group" | int32L)
   }
 
   val rotationalKeyFrame = {
     ("frame" | int32L) ::
-    ("qx" | floatL) ::
-    ("qy" | floatL) ::
-    ("qz" | floatL) ::
-    ("qw" | floatL)
+    quaternion
   }
+
+  case class TexColor(color: Int, u: Float, v: Float)
+  case class Node(
+    name: String,
+    parentNodeName: String,
+    texturesIds: Vector[Int],
+                   axisOrigin:Vector[Float],
+                   translation:Vector[Float],
+                   rotAngle: Float,
+                   rotAxis:Vector[Float],
+                   scale: Float,
+                   vertices: Vector[(Float, Float, Float)],
+                   texCoords: Vector[TexColor])
 
   val node ={
     ("node_name" | fixedString(40)) ::
@@ -132,10 +107,10 @@ object codec extends LazyLogging {
     ("rot_angle" | floatL ) :: // angle of rotation around the axis in radians
     ("rot_axis" | fixedVectorCodec(3, floatL) ) ::
     ("scale" | fixedVectorCodec(3, floatL) ) ::
-    ("vertices" | vectorOfN( int32L.withContext("num_of_vertices"), (floatL :: floatL :: floatL))) ::
+    ("vertices" | vectorOfN( int32L.withContext("num_of_vertices"), (floatL :: floatL :: floatL).as[(Float, Float, Float)])) ::
     ("texture_coordinates" | vectorOfN( int32L.withContext("num_of_tex_coords"), texColor)) ::
     ("faces" | vectorOfN( int32L.withContext("num_of_faces"), face)) ::
-      /*:: positionla animation if version >=1.5*/
+      /*:: positional animation if version >=1.5*/
     ("rotational_animation" | vectorOfN( int32L.withContext("num_of_key_frames"), rotationalKeyFrame))
   }
 

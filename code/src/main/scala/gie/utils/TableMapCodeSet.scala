@@ -6,7 +6,7 @@ import scala.scalajs.js
 
 object Require extends js.GlobalScope {
 
-   def require(v: String): js.Object = js.native
+   def require(v: String): js.Dynamic = js.native
 
 }
 
