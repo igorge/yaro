@@ -17,13 +17,13 @@ import scala.async.Async.{async, await}
 
 
 case class Header(
-  version: Tuple2[Int,Int],
+  //version: Tuple2[Int,Int],
   animationlenghth: Long,
   shaderType: Long,
   alpha: Int,
   reserved: Vector[Byte] )
 {
-  def havePositionalAnimation_?(): Boolean = version._1>1 || (version._1==1 && version._2>=5)
+//  def havePositionalAnimation_?(): Boolean = version._1>1 || (version._1==1 && version._2>=5)
 }
 
 
@@ -62,13 +62,18 @@ object codec extends LazyLogging {
   implicit val iconv = makeIconv()
 
   val rsmMagic = {
-    "rsm_magic" | (constant('G') :: constant('R') :: constant('S') :: constant('M')).as[Unit]
-  }
+    constant('G') :: constant('R') :: constant('S') :: constant('M')
+  }.withContext("magic").as[Unit]
+
+//  val version = {
+//    ("major_version" | uint8 ) ::
+//    ("minor_version" | uint8 )
+//  }.as[Tuple2[Int,Int]]
 
   val version = {
-    ("major_version" | uint8 ) ::
-    ("minor_version" | uint8 )
-  }.as[Tuple2[Int,Int]]
+      ("major_version" | constant(1) ) ::
+      ("minor_version" | constant(4) )
+  }.withContext("version").as[Unit]
 
   val animationLength = ("animation_length" | uint32L)
   val shaderType = ("shader_type" | uint32L)
@@ -77,11 +82,10 @@ object codec extends LazyLogging {
 
   val header ={
     rsmMagic  :~>: version :: animationLength :: shaderType :: alphaValue :: reserved
-  }.as[Header]
+  }.withContext("header").as[Header]
 
   val textureNames ={
     ("textures_names" | vectorOfN(int32L, fixedString(40)))
-
   }
 
   val mainNodeName ={
@@ -94,7 +98,7 @@ object codec extends LazyLogging {
     int32L.withContext("color") ::
     floatL.withContext("u") ::
     floatL.withContext("v")
-  }.as[TexColor]
+  }.withContext("texture_color").as[TexColor]
 
   val quaternion = {
     ("qx" | floatL) ::
@@ -111,12 +115,12 @@ object codec extends LazyLogging {
     ("m_reserved_padding" | uint16L) ::
     ("two_side" | int32L) ::
     ("smooth_group" | int32L)
-  }.as[Face]
+  }.withContext("face").as[Face]
 
   val rotationalKeyFrame = {
     ("frame" | int32L) ::
     quaternion
-  }.as[RotationalKeyFrame]
+  }.withContext("rotational_key_frame").as[RotationalKeyFrame]
 
   val node ={
     ("node_name" | fixedString(40)) ::
@@ -132,7 +136,7 @@ object codec extends LazyLogging {
     ("faces" | vectorOfN( int32L.withContext("num_of_faces"), face)) ::
       /*:: positional animation if version >=1.5*/
     ("rotational_animation" | vectorOfN( int32L.withContext("num_of_key_frames"), rotationalKeyFrame))
-  }.as[Node]
+  }.withContext("node").as[Node]
 
   val nodes ={
     ("nodes" | vectorOfN(int32L, node))
@@ -143,7 +147,7 @@ object codec extends LazyLogging {
     textureNames ::
     mainNodeName ::
     nodes
-  }
+  }.withContext("rsm_file")
 
 
 
