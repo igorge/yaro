@@ -1,5 +1,6 @@
 package gie.yaro.rsm.file
 
+import gie.jsutils._
 import gie.scodec.FixedVectorCodec
 import gie.yaro.RoStore
 import scodec.bits.{ByteVector, BitVector}
@@ -59,7 +60,8 @@ object codec extends LazyLogging {
   import gie.yaro.FixedString._
   import gie.yaro.emptyStringToOpt
 
-  implicit val iconv = makeIconv()
+  implicit val bufferCtor = BufferConstructor()
+  implicit val iconvLite = IconvLite()
 
   val rsmMagic = {
     constant('G') :: constant('R') :: constant('S') :: constant('M')
@@ -154,7 +156,19 @@ object codec extends LazyLogging {
   def test()(implicit executor: ExecutionContext): Unit = {
     logger.debug("codec.test()")
 
+    import scala.scalajs.js.JSConverters._
+
     async {
+
+      val newBuffer = BufferConstructor()
+
+      val data =  newBuffer( await( RoStore.open("ro-data-unpacked/texture/내부소품/lion ring.bmp") ).toJSArray )
+
+      val bmp = NodeBitmapClass(data)
+
+      println(bmp.getData())
+
+
 
       val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
       println(s"result >> ${r}")
