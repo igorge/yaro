@@ -157,21 +157,24 @@ object codec extends LazyLogging {
     logger.debug("codec.test()")
 
     import scala.scalajs.js.JSConverters._
+    import gie.scodec.BmpCodecs.Bmp256Decoder
 
     async {
 
       val newBuffer = BufferConstructor()
 
-      val data =  newBuffer( await( RoStore.open("ro-data-unpacked/texture/내부소품/lion ring.bmp") ).toJSArray )
+      //val data = BitVector(await( RoStore.open("ro-data-unpacked/texture/내부소품/lion ring.bmp") ))
+      val data = BitVector(await( RoStore.open("ro-data-unpacked/texture/내부소품/gedan-side4.bmp") ))
 
-      val bmp = NodeBitmapClass(data)
 
-      println(bmp.getData())
+      val bmp = Bmp256Decoder.decode(data)
+
+      println(bmp)
 
 
 
       val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
-      println(s"result >> ${r}")
+//      println(s"result >> ${r}")
 
     }.onComplete( _.get )
 
