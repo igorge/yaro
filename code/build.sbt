@@ -14,6 +14,11 @@ enablePlugins(ScalaJSPlugin)
 
 //libraryDependencies += "biz.enef" %%% "scalajs-angulate" % "0.2.1"
 
+libraryDependencies += "gie" %%% "gielib" % "0.1-SNAPSHOT"
+
+libraryDependencies += "gie" %%% "gielib-scodec" % "0.1-SNAPSHOT"
+
+libraryDependencies += "biz.enef" %%% "slogging" % "0.3"
 
 libraryDependencies += "biz.enef" %%% "slogging" % "0.3"
 
@@ -25,7 +30,7 @@ libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.0.9"
 
 libraryDependencies += "org.scodec" %%% "scodec-core" % "1.8.1"
 
-libraryDependencies += "org.scala-js" %%% "scala-parser-combinators" % "1.0.2"
+//libraryDependencies += "org.scala-js" %%% "scala-parser-combinators" % "1.0.2"
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.5"
 
