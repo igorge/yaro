@@ -12,6 +12,7 @@ import scala.scalajs.js.typedarray.{Int8Array, ArrayBuffer, Uint8Array}
 
 import scalajs.js
 import org.scalajs.dom
+import scala.async.Async._
 
 
 object RoStore extends LazyLogging {
@@ -150,6 +151,7 @@ object app extends JSApp with LazyLogging {
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
 
+      async {
 
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
@@ -157,6 +159,19 @@ object app extends JSApp with LazyLogging {
       val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.ContextUnbind with gie.gl.SML_Matrix4FRich {
         //@inline override def checkGlError(): Unit = { /*noop*/ }
       }
+
+//        await(loadTexture(RoStore.open("ro-data-unpacked/texture/내부소품/gedan-side4.bmp")))
+
+        def loadTex(path: String) = async {
+          val (w,h,data) = await(loadTexture(RoStore.open(path)))
+          gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
+            gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
+            gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
+            gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
+
+            texture
+          }
+        }
 
 
       def createSolidTexture(r: Byte, g: Byte, b: Byte, a: Byte)={
@@ -172,7 +187,7 @@ object app extends JSApp with LazyLogging {
 
       }
 
-      val tex1 = createSolidTexture(-1,0,0,-1)
+      val tex1 = await(loadTex("ro-data-unpacked/texture/내부소품/tor_boom.bmp")) //createSolidTexture(-1,0,0,-1)
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -186,6 +201,8 @@ object app extends JSApp with LazyLogging {
         usage = gl.const.STATIC_DRAW,
         data = js.Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
       )
+
+
 
       val mapToLocations = gl.nameToLocationsMaps()
 
@@ -273,7 +290,8 @@ object app extends JSApp with LazyLogging {
 
       tick(System.nanoTime())(0)
 
-    })
+    }.onComplete( _.get )})
+
 
 
   }

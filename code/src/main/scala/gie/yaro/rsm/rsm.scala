@@ -161,7 +161,7 @@ object codec extends LazyLogging {
 
     async {
 
-      val newBuffer = BufferConstructor()
+//      val newBuffer = BufferConstructor()
 
       //val data = BitVector(await( RoStore.open("ro-data-unpacked/texture/내부소품/lion ring.bmp") ))
       val data = BitVector(await( RoStore.open("ro-data-unpacked/texture/내부소품/gedan-side4.bmp") ))

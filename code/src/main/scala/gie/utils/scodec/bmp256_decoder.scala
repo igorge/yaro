@@ -20,7 +20,7 @@ package Bmp {
                               clrUsed: Long,
                               clrImportant: Long)
 
-  case class RGBQUAD(blue: Int, green: Int, Red: Int, reserved: Int)
+  case class RGBQUAD(blue: Int, green: Int, red: Int, reserved: Int)
 
   case class Bmp256(bitmapFileHeader: BITMAPFILEHEADER,
                     bitmapInfoHeader:BITMAPINFOHEADER,
@@ -117,9 +117,6 @@ package scodec {
 
           imageCodec.decode(contBits).require
         }
-
-
-        println(s"aklfjalk: ${ub2i(-1).toByte}")
 
         Attempt.successful( DecodeResult(Bmp256(fileHeader, imageHeader, palette, imageData), rem))
       }
