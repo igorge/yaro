@@ -5,19 +5,20 @@ import gie.scodec.BmpCodecs.Bmp256Decoder
 import gie.Bmp._
 
 import scodec.bits.BitVector
+import slogging.LazyLogging
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
-object loadTexture  {
+object loadTexture {
 
-  def apply(dataRaw: Future[IndexedSeq[Byte]])(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] ={
+  def apply(dataRaw: Future[IndexedSeq[Byte]], alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] ={
     async {
       val data = BitVector(await( dataRaw ))
 
       val bmp = await(Future{Bmp256Decoder.decode(data).require.value})
 
-      println(s"w: ${bmp.bitmapInfoHeader.width}, h: ${bmp.bitmapInfoHeader.height}")
+      //println(s"w: ${bmp.bitmapInfoHeader.width}, h: ${bmp.bitmapInfoHeader.height}")
 
       assume(bmp.bitmapInfoHeader.width>0)
       assume(bmp.bitmapInfoHeader.height>0)
@@ -26,18 +27,48 @@ object loadTexture  {
 
       var targetIdx: Int = 0
       for( scanLine <- bmp.imageData.view.reverse; i <- scanLine ){
-        val color = bmp.palette( ByteOps.ub2i(i) )
+        val idx = ByteOps.ub2i(i)
+        val color = bmp.palette( idx )
         buffer(targetIdx + 0) = color.red.asInstanceOf[Byte]
         buffer(targetIdx + 1) = color.green.asInstanceOf[Byte]
         buffer(targetIdx + 2) = color.blue.asInstanceOf[Byte]
-        buffer(targetIdx + 3) = -1 //alpha
+        if(idx==alpha) {
+          buffer(targetIdx + 3) = 0
+        } else {
+          buffer(targetIdx + 3) = -1
+        }
 
         targetIdx+=4
       }
 
+      assume(targetIdx == buffer.size )
+
       (bmp.bitmapInfoHeader.width.toInt, bmp.bitmapInfoHeader.height.toInt, buffer)
     }
 
+  }
+
+}
+
+
+case class CachedTextureData(width: Int, height: Int, alpha: Int, data:Array[Byte])
+
+class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging{
+  private val m_cache = new collection.mutable.HashMap[String, Future[CachedTextureData]]() //XXX: this is fine for JS as we have only 1 thread, so no synchronization is required
+
+  private def impl_loadTexture(key: String, alpha: Int)(implicit executor: ExecutionContext): Future[CachedTextureData] ={
+    logger.debug(s"Texture cache miss: ${key}")
+
+    loadTexture.apply(urlResolver(key), alpha) map {
+      case (w,h, data) => CachedTextureData(w, h, alpha, data)
+    }
+  }
+
+  def get(key: String, alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] = async {
+
+    val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
+    assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
+    (texData.width, texData.height, texData.data)
   }
 
 }
