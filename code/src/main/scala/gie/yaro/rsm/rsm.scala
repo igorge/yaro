@@ -2,7 +2,6 @@ package gie.yaro.rsm.file
 
 import gie.jsutils._
 import gie.scodec.FixedVectorCodec
-import gie.yaro.RoStore
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
 
@@ -155,7 +154,7 @@ object codec extends LazyLogging {
     import gie.scodec.BmpCodecs.Bmp256Decoder
 
     async {
-      val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
+      //val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
 
     }.onComplete( _.get )
 

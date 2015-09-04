@@ -1,7 +1,6 @@
 package gie.yaro
 
 
-import gie.jsutils.XMLHttpRequestFuture
 import slogging._
 
 
@@ -13,37 +12,6 @@ import scala.scalajs.js.typedarray.{Int8Array, ArrayBuffer, Uint8Array}
 import scalajs.js
 import org.scalajs.dom
 import scala.async.Async._
-
-
-object RoStore extends LazyLogging {
-
-  import app.executionContext
-
-
-  val prefix = s"${dom.location.origin}/"
-
-  def open(path: String) = {
-    val url = s"${prefix}${path}"
-
-    logger.debug(url)
-
-    val xhr = new dom.XMLHttpRequest()
-
-    val f = new XMLHttpRequestFuture(xhr, Some(XMLHttpRequestFuture.responseType.arrayBuffer))
-
-    xhr.open("GET", url)
-    xhr.send()
-
-    f.map{ r=>
-      val buffer = new Int8Array ( r.asInstanceOf[ArrayBuffer] )
-      new IndexedSeq[Byte] {
-        def length = buffer.length
-        def apply(idx: Int) = buffer(idx)
-      }
-    }
-  }
-
-}
 
 
 object shaderSource {
@@ -86,9 +54,6 @@ object shaderSource {
     """.stripMargin
 
 
-
-
-
   val vertexShader =
     """
       |invariant gl_Position;
@@ -129,7 +94,7 @@ object shaderSource {
 
 object app extends JSApp with LazyLogging {
 
-  implicit val executionContext:ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  implicit val appExecutionContext:ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
   final val NANOS_IN_SEC      = 1000000000L
@@ -148,7 +113,9 @@ object app extends JSApp with LazyLogging {
 
     rsm.file.codec.test()
 
-    val texManager = new TextureManager(RoStore.open)
+    val roServices = new TextureManagerComponent with RsmLoaderComponent with RoStoreComponent with ExecutionContextComponent with LazyLogging {
+      implicit def executionContext: ExecutionContext = appExecutionContext
+    }
 
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
@@ -163,7 +130,7 @@ object app extends JSApp with LazyLogging {
       }
 
         def loadTex(path: String, alpha: Int) = async {
-          val (w,h,data) = await(texManager.get(path, alpha))
+          val (w,h,data) = await(roServices.textureManager.get(path, alpha))
           gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
             gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
             gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)

@@ -10,9 +10,9 @@ import slogging.LazyLogging
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
-object loadTexture {
+object TextureManager {
 
-  def apply(dataRaw: Future[IndexedSeq[Byte]], alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] ={
+  def load(dataRaw: Future[IndexedSeq[Byte]], alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] ={
     async {
       val data = BitVector(await( dataRaw ))
 
@@ -51,24 +51,34 @@ object loadTexture {
 }
 
 
-case class CachedTextureData(width: Int, height: Int, alpha: Int, data:Array[Byte])
 
-class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging{
-  private val m_cache = new collection.mutable.HashMap[String, Future[CachedTextureData]]() //XXX: this is fine for JS as we have only 1 thread, so no synchronization is required
+trait TextureManagerComponent { this: RoStoreComponent with ExecutionContextComponent =>
 
-  private def impl_loadTexture(key: String, alpha: Int)(implicit executor: ExecutionContext): Future[CachedTextureData] ={
-    logger.debug(s"Texture cache miss: ${key}")
+  class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging {
 
-    loadTexture.apply(urlResolver(key), alpha) map {
-      case (w,h, data) => CachedTextureData(w, h, alpha, data)
+    import TextureManager._
+
+    private case class CachedTextureData(width: Int, height: Int, alpha: Int, data:Array[Byte])
+
+    private val m_cache = new collection.mutable.HashMap[String, Future[CachedTextureData]]() //XXX: this is fine for JS as we have only 1 thread, so no synchronization is required
+
+    private def impl_loadTexture(key: String, alpha: Int): Future[CachedTextureData] ={
+      logger.debug(s"Texture cache miss: ${key}")
+
+      load(urlResolver(key), alpha) map {
+        case (w,h, data) => CachedTextureData(w, h, alpha, data)
+      }
     }
+
+    def get(key: String, alpha: Int): Future[(Int,Int,Array[Byte])] = async {
+
+      val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
+      assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
+      (texData.width, texData.height, texData.data)
+    }
+
   }
 
-  def get(key: String, alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] = async {
 
-    val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
-    assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
-    (texData.width, texData.height, texData.data)
-  }
-
+  lazy val textureManager = new TextureManager( roStore.openTexture _ )
 }
