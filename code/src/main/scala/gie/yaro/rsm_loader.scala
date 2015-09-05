@@ -1,7 +1,14 @@
 package gie.yaro
 
-trait RsmLoaderComponent { this: TextureManagerComponent =>
+import scodec.bits.{ByteVector, BitVector}
 
-  //def
+
+trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent with RoResourceComponent =>
+
+  def load(path: String): Unit ={
+
+    //val r = file.decode( BitVector( await( roResource.openRsm(path) ) ) )
+
+  }
 
 }

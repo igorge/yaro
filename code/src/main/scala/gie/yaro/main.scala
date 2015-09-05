@@ -111,11 +111,11 @@ object app extends JSApp with LazyLogging {
 
     //dom.alert("Hi from Scala-js-dom")
 
-    rsm.file.codec.test()
-
-    val roServices = new TextureManagerComponent with RsmLoaderComponent with RoStoreComponent with ExecutionContextComponent with LazyLogging {
+    val roServices = new TextureManagerComponent with RsmLoaderComponent with RoStoreComponent with RoResourceComponent with ExecutionContextComponent with LazyLogging {
       implicit def executionContext: ExecutionContext = appExecutionContext
     }
+
+    rsm.file.codec.test(roServices)
 
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
@@ -154,7 +154,7 @@ object app extends JSApp with LazyLogging {
 
       }
 
-      val tex1 = await(loadTex("ro-data-unpacked/texture/내부소품/tor_boom.bmp", 255)) //createSolidTexture(-1,0,0,-1)
+      val tex1 = await(loadTex("내부소품/tor_boom.bmp", 255)) //createSolidTexture(-1,0,0,-1)
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)

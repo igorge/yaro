@@ -2,6 +2,7 @@ package gie.yaro.rsm.file
 
 import gie.jsutils._
 import gie.scodec.FixedVectorCodec
+import gie.yaro.RoResourceComponent
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
 
@@ -14,6 +15,12 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.array2JSRichGenTrav
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 import scala.async.Async.{async, await}
+
+
+case class RsmFileData( header: Header,
+                        textureNames: Vector[String],
+                        mainNodeName: String,
+                        nodes: Vector[Node])
 
 
 case class Header(
@@ -54,48 +61,60 @@ case class Node( name: String,
                  rotationalAnimation: Vector[RotationalKeyFrame] )
 
 
-object codec extends LazyLogging {
+object codec extends Codec[RsmFileData] with LazyLogging {
   import FixedVectorCodec._
   import gie.yaro.FixedString._
   import gie.yaro.emptyStringToOpt
 
-  implicit val bufferCtor = BufferConstructor()
-  implicit val iconvLite = IconvLite()
+  private implicit val bufferCtor = BufferConstructor()
+  private implicit val iconvLite = IconvLite()
 
+  private
   val rsmMagic = {
     constant('G') :: constant('R') :: constant('S') :: constant('M')
   }.withContext("magic").as[Unit]
 
+  private
   val version = {
       ("major_version" | constant(1) ) ::
       ("minor_version" | constant(4) )
   }.withContext("version").as[Unit]
 
+  private
   val animationLength = ("animation_length" | uint32L)
+  private
   val shaderType = ("shader_type" | uint32L)
+  private
   val alphaValue = ("alpha" | uint8 )
+  private
   val reserved = ("reserved" | fixedVectorCodec(16, byte) )
 
+  private
   val header ={
     rsmMagic  :~>: version :: animationLength :: shaderType :: alphaValue :: reserved
   }.withContext("header").as[Header]
 
+  private
   val textureNames ={
     ("textures_names" | vectorOfN(int32L, fixedString(40)))
   }
 
+  private
   val mainNodeName ={
     ("main_node_name" | fixedString(40))
   }
 
+  private
   val textureId = ("texture_id" | int32L)
 
+  private
   val texColor = {
     int32L.withContext("color") ::
     floatL.withContext("u") ::
     floatL.withContext("v")
   }.withContext("texture_color").as[TexColor]
 
+  private
   val quaternion = {
     ("qx" | floatL) ::
     ("qy" | floatL) ::
@@ -104,6 +123,7 @@ object codec extends LazyLogging {
   }.withContext("quaternion").as[Quaternion]
 
 
+  private
   val face = {
     ("vertex_idx" | uint16L :: uint16L :: uint16L).as[Vector3I] ::
     ("texture_vertex_idx" | uint16L :: uint16L :: uint16L).as[Vector3I] ::
@@ -113,11 +133,13 @@ object codec extends LazyLogging {
     ("smooth_group" | int32L)
   }.withContext("face").as[Face]
 
+  private
   val rotationalKeyFrame = {
     ("frame" | int32L) ::
     quaternion
   }.withContext("rotational_key_frame").as[RotationalKeyFrame]
 
+  private
   val node ={
     ("node_name" | fixedString(40)) ::
     ("parent_node_name" | emptyStringToOpt(fixedString(40))) ::
@@ -134,27 +156,37 @@ object codec extends LazyLogging {
     ("rotational_animation" | vectorOfN( int32L.withContext("num_of_key_frames"), rotationalKeyFrame))
   }.withContext("node").as[Node]
 
+  private
   val nodes ={
     ("nodes" | vectorOfN(int32L, node))
   }
 
+  private
   val file = {
     header ::
     textureNames ::
     mainNodeName ::
     nodes
-  }.withContext("rsm_file")
+  }.as[RsmFileData].withContext("rsm_file")
+
+
+  def sizeBound: scodec.SizeBound = file.sizeBound
+  def decode(bits: scodec.bits.BitVector): scodec.Attempt[scodec.DecodeResult[gie.yaro.rsm.file.RsmFileData]] = file.decode(bits)
+  def encode(value: gie.yaro.rsm.file.RsmFileData): scodec.Attempt[scodec.bits.BitVector] = ???
 
 
 
-  def test()(implicit executor: ExecutionContext): Unit = {
+  def test(roServices: RoResourceComponent)(implicit executor: ExecutionContext): Unit = {
+    import roServices._
     logger.debug("codec.test()")
 
     import scala.scalajs.js.JSConverters._
     import gie.scodec.BmpCodecs.Bmp256Decoder
 
     async {
-      //val r = file.decode( BitVector( await( RoStore.open("ro-data-unpacked/model/글래지하수로/하수구_라이온1.rsm") ) ) )
+      val r = this.decode( BitVector( await( roResource.openRsm("글래지하수로/하수구_라이온1.rsm") ) ) )
+
+      println(r)
 
     }.onComplete( _.get )
 

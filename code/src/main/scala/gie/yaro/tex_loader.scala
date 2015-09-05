@@ -52,7 +52,7 @@ object TextureManager {
 
 
 
-trait TextureManagerComponent { this: RoStoreComponent with ExecutionContextComponent =>
+trait TextureManagerComponent { this: RoStoreComponent with RoResourceComponent with ExecutionContextComponent =>
 
   class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging {
 
@@ -80,5 +80,5 @@ trait TextureManagerComponent { this: RoStoreComponent with ExecutionContextComp
   }
 
 
-  lazy val textureManager = new TextureManager( roStore.openTexture _ )
+  lazy val textureManager = new TextureManager( roResource.openTexture _ )
 }

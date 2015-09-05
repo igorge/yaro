@@ -6,13 +6,28 @@ import slogging.LoggerHolder
 
 import scala.scalajs.js.typedarray.{ArrayBuffer, Int8Array}
 
+trait RoResourceComponent { this: RoStoreComponent =>
+
+  class RoStoreByTypeImpl {
+
+    val dataDir = "ro-data-unpacked"
+    val textureDir = "texture"
+    val rsmDir = "model"
+
+    def openTexture(path: String) = roStore.open(s"${dataDir}/${textureDir}/${path}")
+    def openRsm(path: String) = roStore.open(s"${dataDir}/${rsmDir}/${path}")
+  }
+
+  lazy val roResource = new RoStoreByTypeImpl()
+
+}
+
 trait RoStoreComponent { this: LoggerHolder with ExecutionContextComponent =>
 
   val roStorePrefix = s"${dom.location.origin}/"
 
   class RoStore {
 
-    def openTexture(path: String) = open(path)
 
     def open(path: String)= {
       val url = s"${roStorePrefix}${path}"
