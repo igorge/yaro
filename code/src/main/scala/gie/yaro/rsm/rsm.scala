@@ -176,26 +176,20 @@ object codec extends Codec[RsmFileData] with LazyLogging {
 
 
 
-  def test(roServices: RoResourceComponent)(implicit executor: ExecutionContext): Unit = {
-    import roServices._
-    logger.debug("codec.test()")
-
-    import scala.scalajs.js.JSConverters._
-    import gie.scodec.BmpCodecs.Bmp256Decoder
-
-    async {
-      val r = this.decode( BitVector( await( roResource.openRsm("글래지하수로/하수구_라이온1.rsm") ) ) )
-
-      println(r)
-
-    }.onComplete( _.get )
-
-  }
+//  def test(roServices: RoResourceComponent)(implicit executor: ExecutionContext): Unit = {
+//    import roServices._
+//    logger.debug("codec.test()")
+//
+//    import scala.scalajs.js.JSConverters._
+//    import gie.scodec.BmpCodecs.Bmp256Decoder
+//
+//    async {
+//      val r = this.decode( BitVector( await( roResource.openRsm("글래지하수로/하수구_라이온1.rsm") ) ) )
+//
+//      println(r)
+//
+//    }.onComplete( _.get )
+//
+//  }
 
 }
-
-
-
-
-import scodec.bits._
-

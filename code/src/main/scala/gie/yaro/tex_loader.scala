@@ -54,6 +54,8 @@ object TextureManager {
 
 trait TextureManagerComponent { this: RoStoreComponent with RoResourceComponent with ExecutionContextComponent =>
 
+  type TextureData = (Int,Int,Array[Byte])
+
   class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging {
 
     import TextureManager._
@@ -71,7 +73,6 @@ trait TextureManagerComponent { this: RoStoreComponent with RoResourceComponent 
     }
 
     def get(key: String, alpha: Int): Future[(Int,Int,Array[Byte])] = async {
-
       val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
       assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
       (texData.width, texData.height, texData.data)
