@@ -1,12 +1,13 @@
 package gie.yaro
 
 import gie.jsutils.XMLHttpRequestFuture
+import gie.jsutils.XMLHttpRequestFuture.statusCodes._
 import org.scalajs.dom
 import slogging.LoggerHolder
 
 import scala.scalajs.js.typedarray.{ArrayBuffer, Int8Array}
 
-trait RoResourceComponent { this: RoStoreComponent =>
+trait RoResourceComponent { this: RoStoreComponent with LoggerHolder with ExecutionContextComponent =>
 
   class RoStoreByTypeImpl {
 
@@ -14,7 +15,16 @@ trait RoResourceComponent { this: RoStoreComponent =>
     val textureDir = "texture"
     val rsmDir = "model"
 
-    def openTexture(path: String) = roStore.open(s"${dataDir}/${textureDir}/${path}")
+    def openTexture(path: String) = {
+
+      roStore.open(s"${dataDir}/${textureDir}/${path}").recoverWith{
+        case e@_ if { logger.debug(s"Exception while loading texture: ${e}"); false } => ???
+        case e:gie.jsutils.ConnectionException if e.status==SC_NOT_FOUND =>
+          val newPath = path.toLowerCase()
+          logger.debug(s"Trying different name: '${path}' => '${newPath}'")
+          roStore.open(s"${dataDir}/${textureDir}/${newPath}")
+      }
+    }
     def openRsm(path: String) = roStore.open(s"${dataDir}/${rsmDir}/${path}")
   }
 
