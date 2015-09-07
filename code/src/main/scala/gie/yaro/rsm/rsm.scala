@@ -35,7 +35,9 @@ case class Header(
 
 
 case class RotationalKeyFrame(frame: Int, rot:Quaternion)
-case class Vector3I(x: Int, y: Int, z:Int)
+case class Vector3I(x: Int, y: Int, z:Int){
+  def toArray:Array[Int] = Array(x,y,z)
+}
 case class Quaternion(qx: Float, qy: Float,qz: Float, qw: Float)
 
 case class TexColor(color: Int, u: Float, v: Float)

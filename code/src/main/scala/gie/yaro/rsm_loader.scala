@@ -5,7 +5,7 @@ import slogging.LazyLogging
 import scala.concurrent.Future
 import scala.async.Async.{async, await}
 import scodec.bits.{ByteVector, BitVector}
-import gie.yaro.rsm.file.{codec => rsmCodec, Node, RsmFileData}
+import gie.yaro.rsm.file.{codec => rsmCodec, Vector3I, Face, Node, RsmFileData}
 
 class ModelNode {
 
@@ -38,7 +38,7 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
 
     }
 
-    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:Array[TextureData])= async {
+    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:Array[TextureData]): Future[Unit] = async {
       import node._
 
       logger.debug(s"processing node: ${node.name}")
@@ -51,11 +51,17 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
       }
 
       def impl_processNodeByTexId(texId: Int) = {
-        node.faces.filter( _.textureId == texId )
+        node.faces.view.filter( _.textureId == texId ).unzip{face=>
+          (face.vertexIndex.toArray, face.texVertexIndex.toArray)
+        } match {
+          case(vIdx, texIdx) => (vIdx.flatten.toArray.toSeq, texIdx.flatten.toArray.toSeq)
+        }
       }
 
-      (0 until texturesIds.size) map impl_processNodeByTexId
+      (0 until texturesIds.size) map impl_processNodeByTexId foreach{v=> logger.debug(v.toString)}
 
+
+      Unit
 
 //      val maxVIdxX = node.faces.map(_.vertexIndex.x).reduce(_ max _)
 //      val maxVIdxY = node.faces.map(_.vertexIndex.y).reduce(_ max _)
