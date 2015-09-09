@@ -1,6 +1,6 @@
 package gie.gsg
 
 
-trait Node {
+trait Node extends WithStateSet {
   def accept(visitor: NodeVisitor): Unit
 }
