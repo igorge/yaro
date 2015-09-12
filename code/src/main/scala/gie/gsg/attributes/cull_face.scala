@@ -1,11 +1,14 @@
 package gie.gsg.state_attribute
 
-class CullFace()  extends StateAttribute {
+import gie.gsg.{RenderContext, AttributeVisitor}
+
+class CullFace[CTX <: RenderContext]() extends StateAttribute[CTX] {
   val index = 1
 
-  def ===(y: StateAttribute): Boolean=if (index!=y.index) false else {
+  def ===(y: StateAttribute[CTX]): Boolean=if (index!=y.index) false else {
     false
   }
+  def accept(visitor:AttributeVisitor[CTX]): Unit = ???
 }
 
 

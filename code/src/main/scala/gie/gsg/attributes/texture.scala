@@ -1,9 +1,13 @@
 package gie.gsg.state_attribute
 
-class Texture() extends StateAttribute{
+import gie.gsg.{RenderContext, AttributeVisitor}
+
+class Texture[CTX <: RenderContext]() extends StateAttribute[CTX]{
   val index = 2
 
-  def ===(y: StateAttribute): Boolean=if (index!=y.index) false else {
+  def ===(y: StateAttribute[CTX]): Boolean=if (index!=y.index) false else {
     false
   }
+
+  def accept(visitor:AttributeVisitor[CTX]): Unit = ???
 }

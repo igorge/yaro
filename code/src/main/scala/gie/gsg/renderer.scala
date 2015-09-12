@@ -1,11 +1,29 @@
 package gie.gsg
 
+import gie.gl.Context
 import gie.sml.MatrixRead4F
+import slogging.StrictLogging
 
 import scala.collection.mutable.ArrayBuffer
 
 
-class Renderer {
+trait RenderContext {
+  type GLT <: Context
+}
+
+class Renderer[GLType <: Context](val gl: GLType) extends RenderContext with StrictLogging { renderer =>
+
+  type GLT = GLType
+
+  object attribute {
+    def createProgram(program: gl.GLProgram) = new state_attribute.GlProgram[Renderer[GLType]](program)
+  }
+
+  object ApplyAttributeVisitor extends AttributeVisitor[renderer.type] {
+    def visit(n: state_attribute.GlProgram[renderer.type]): Unit = {
+
+    }
+  }
 
   def render(node: Node): Unit ={
     val stateSetStack = new ArrayBuffer[StateSet]()

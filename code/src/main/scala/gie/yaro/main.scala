@@ -12,7 +12,7 @@ import scala.scalajs.js.typedarray.{Int8Array, ArrayBuffer, Uint8Array}
 import scalajs.js
 import org.scalajs.dom
 import scala.async.Async._
-
+import gie.gsg
 
 object shaderSource {
 
@@ -134,6 +134,7 @@ object app extends JSApp with LazyLogging {
         //@inline override def checkGlError(): Unit = { /*noop*/ }
       }
 
+
         def loadTex(path: String, alpha: Int) = async {
           val (w,h,data) = await(roServices.textureManager.get(path, alpha))
           gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
@@ -190,6 +191,10 @@ object app extends JSApp with LazyLogging {
       val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
       val program = gl.Program()
+
+        val renderer = new gsg.Renderer(gl)
+        renderer.attribute.createProgram(program.program)
+
 
       val vertexShader = gl.shaderOps(gl.createVertexShader())
         .source(shaderSource.vertexShader)

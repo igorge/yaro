@@ -1,9 +1,13 @@
 package gie.gsg.state_attribute
 
-trait StateAttribute {
+import gie.gl.Context
+import gie.gsg.{RenderContext, AttributeVisitor}
+
+trait StateAttribute[CTX <: RenderContext] {
   val index: Int
 
-  def ===(y: StateAttribute): Boolean
+  def ===(y: StateAttribute[CTX]): Boolean
+  def accept(visitor:AttributeVisitor[CTX]): Unit
 }
 
 object StateAttribute {
