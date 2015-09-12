@@ -9,20 +9,20 @@ import scala.collection.mutable.ArrayBuffer
 
 trait RenderContext {
   type GLT <: Context
+  val gl: GLT
 }
 
-class Renderer[GLType <: Context](val gl: GLType) extends RenderContext with StrictLogging { renderer =>
+class Renderer[GLType <: Context](val gl: GLType)
+  extends RenderContext
+  with state_attribute.StateAttributeComponent
+  with state_attribute.GlProgramComponent
+  with StrictLogging
+{ renderer =>
 
   type GLT = GLType
 
   object attribute {
-    def createProgram(program: gl.GLProgram) = new state_attribute.GlProgram[Renderer[GLType]](program)
-  }
-
-  object ApplyAttributeVisitor extends AttributeVisitor[renderer.type] {
-    def visit(n: state_attribute.GlProgram[renderer.type]): Unit = {
-
-    }
+    def createProgram(program: gl.GLProgram) = new GlProgram(program)
   }
 
   def render(node: Node): Unit ={

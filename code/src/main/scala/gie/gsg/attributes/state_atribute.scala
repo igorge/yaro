@@ -1,14 +1,22 @@
 package gie.gsg.state_attribute
 
 import gie.gl.Context
-import gie.gsg.{RenderContext, AttributeVisitor}
+import gie.gsg.{RenderContext}
 
-trait StateAttribute[CTX <: RenderContext] {
-  val index: Int
 
-  def ===(y: StateAttribute[CTX]): Boolean
-  def accept(visitor:AttributeVisitor[CTX]): Unit
+trait StateAttributeComponent {
+  this: RenderContext =>
+
+  trait StateAttribute{
+    val index: Int
+
+    def ===(y: StateAttribute): Boolean
+    def apply(): Unit
+  }
+
+
 }
+
 
 object StateAttribute {
   val attributesCount = 3

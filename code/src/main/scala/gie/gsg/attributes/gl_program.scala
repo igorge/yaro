@@ -1,15 +1,21 @@
 package gie.gsg.state_attribute
 
 import gie.gl.Context
-import gie.gsg.{RenderContext, AttributeVisitor}
+import gie.gsg.{RenderContext}
 
-class GlProgram[CTX <: RenderContext](val program: CTX#GLT#GLProgram) extends StateAttribute[CTX] {
-  val index = 0
+trait GlProgramComponent {
+  this: RenderContext with StateAttributeComponent =>
 
-  def ===(y: StateAttribute[CTX]): Boolean=if (index!=y.index) false else {
-    program == y.asInstanceOf[GlProgram[CTX]].program
+  class GlProgram(val program: gl.GLProgram) extends StateAttribute {
+    val index = 0
+
+    def ===(y: StateAttribute): Boolean = if (index != y.index) false else { program == y.asInstanceOf[GlProgram].program }
+
+    def apply(): Unit={
+      gl.useProgram(program)
+    }
+
   }
 
-  def accept(visitor:AttributeVisitor[CTX]): Unit = visitor.visit(this)
 }
 
