@@ -9,6 +9,7 @@ import slogging.LazyLogging
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 object TextureManager {
 
