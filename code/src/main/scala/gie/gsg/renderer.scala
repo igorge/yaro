@@ -21,6 +21,7 @@ class Renderer[GLType <: Context](val gl: GLType)
   with GroupComponent
   with TransformComponent
   with GeodeComponent
+  with OwnerDrawComponent
   with DrawableComponent
   with WithStateSetComponent
   with NodeVisitorComponent
@@ -33,33 +34,38 @@ class Renderer[GLType <: Context](val gl: GLType)
     def createProgram(program: gl.GLProgram) = new GlProgram(program)
   }
 
+  private def impl_genSelfStateSet(selfSS: StateSet, parentSS: StateSet): StateSet ={
+    if(selfSS eq null) {
+      parentSS
+    } else {
+      if(parentSS eq null) selfSS else {
+        selfSS.mergeCopyWithParent(parentSS)
+      }
+    }
+  }
+
+  private def impl_renderNode(node: Node, mergedStateSet: StateSet): Unit= node match {
+    case n: Transform => ???
+
+    case n: Group =>
+      val selfSS = impl_genSelfStateSet(n.stateSet, mergedStateSet)
+      n.children.foreach( impl_renderNode(_, selfSS) )
+
+    case n: Geode => ???
+
+    case n: OwnerDraw=>
+      val selfSS = impl_genSelfStateSet(n.stateSet, mergedStateSet)
+      impl_applyStateSet(selfSS)
+      n.f(n)
+
+  }
+
+  private def impl_applyStateSet(ss: StateSet): Unit ={
+    ???
+  }
+
   def render(node: Node): Unit ={
-    val stateSetStack = new ArrayBuffer[StateSet]()
-    val transformationStack = new ArrayBuffer[MatrixRead4F]()
-
-    @inline def beginStateStack(f: =>Unit): Unit={
-      val oldSize = stateSetStack.size
-      try{ val r = f } finally { stateSetStack.reduceToSize(oldSize) }
-    }
-
-    @inline def pushStates(n: WithStateSet): Unit = if((n.stateSet ne null) && (n.stateSet.size!=0)) {
-      stateSetStack += n.stateSet
-    }
-
-    object renderVisitor extends NodeVisitor {
-      def visit(n: Geode): Unit = beginStateStack{
-        pushStates(n)
-      }
-
-      def visit(n: Group): Unit = beginStateStack{
-
-      }
-      def visit(n: Transform): Unit  = beginStateStack{
-
-      }
-    }
-
-    node.accept(renderVisitor)
+    impl_renderNode(node, null)
   }
 
 
