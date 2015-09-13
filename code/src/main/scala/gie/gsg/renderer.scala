@@ -60,6 +60,8 @@ class Renderer[GLType <: Context](val gl: GLType)
 
   }
 
+  private val m_appliedStateSet = new StateSet()
+
   private def impl_applyStateSet(ss: StateSet): Unit ={
     ???
   }

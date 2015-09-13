@@ -4,14 +4,29 @@ import gie.gsg.state_attribute.StateAttributeComponent
 import gie.search.binarySearch
 
 import scala.collection.Searching.{SearchResult, Found, InsertionPoint}
+import scala.collection.generic
 import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 
 trait StateSetComponent {
   this: StateAttributeComponent=>
 
-  class StateSet {
+  // Growable += simply appends at the end of array buffer with ordering enforcement
+  // use insert() for set-like element insertion
+  //
+  class StateSet extends generic.Growable[StateAttribute] with collection.IndexedSeq[StateAttribute] {
     private val m_attributes = new ArrayBuffer[StateAttribute]()
+
+    def clear() = m_attributes.clear()
+    def +=(sa: StateAttribute): this.type={
+      if(m_attributes.isEmpty || m_attributes(m_attributes.size-1).index<sa.index){
+        m_attributes += sa
+      } else {
+        throw new IndexOutOfBoundsException(s"Cant insert StateAttribute with index == '${sa.index}' because it will violate ordering.")
+      }
+
+      this
+    }
 
     def attributes: collection.IndexedSeq[StateAttribute] = m_attributes
 
@@ -24,7 +39,7 @@ trait StateSetComponent {
       }._1
     }
 
-    @inline def size: Int = m_attributes.size
+    @inline def length: Int = m_attributes.size
     @inline def apply(idx: Int) = m_attributes(idx)
 
     def remove(key: Int): Unit= {
@@ -34,7 +49,7 @@ trait StateSetComponent {
       }
     }
 
-    def add(s: StateAttribute): Unit ={
+    def insert(s: StateAttribute): Unit ={
       binarySearch(s.index, m_attributes){ (key, attr)=> implicitly[Ordering[Int]].compare(key, attr.index) } match {
         case Found(index) => throw new Exception(s"StateSet already has attribute at index '${s.index}.")
         case InsertionPoint(index) => m_attributes.insert(index, s)
@@ -47,43 +62,12 @@ trait StateSetComponent {
       assert( impl_DEBUG_isSorted() )
       assert( ss.impl_DEBUG_isSorted() )
 
-      val mySize = size
-      val ssSize = ss.size
       val newSS = new StateSet()
 
-      var i = 0
-      var ss_i = 0
+      gie.sorted_merge.merge(this, ss, newSS){
+        (l:StateAttribute,r:StateAttribute)=>implicitly[Ordering[Int]].compare(l.index,r.index) }{
+        (l,r)=>l }
 
-      while (i!=mySize && ss_i!=ssSize){
-        if (m_attributes(i).index==ss.m_attributes(ss_i).index) {
-          newSS.m_attributes += m_attributes(i)
-          i+=1
-          ss_i+=1
-        } else if (m_attributes(i).index < ss.m_attributes(ss_i).index) {
-          newSS.m_attributes += m_attributes(i)
-          i+=1
-        } else { // (m_attributes(i).index > ss.m_attributes(ss_i).index)
-          newSS.m_attributes += ss.m_attributes(ss_i)
-          ss_i+=1
-        }
-
-        // copy tail
-        if(i!=mySize){
-          assume(ss_i==ssSize)
-          while(i!=mySize){
-            newSS.m_attributes += m_attributes(i)
-            i+=1
-          }
-        } else { //i==mySize
-          assume(i==mySize)
-          assume(ss_i!=ssSize)
-          while(ss_i!=ssSize){
-            newSS.m_attributes += ss.m_attributes(ss_i)
-            ss_i+=1
-          }
-        }
-
-      }
 
       assert(newSS.impl_DEBUG_isSorted())
 
