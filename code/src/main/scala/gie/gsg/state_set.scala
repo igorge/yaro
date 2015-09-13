@@ -1,8 +1,20 @@
 package gie.gsg
 
-class StateSet {
+import gie.gsg.state_attribute.StateAttributeComponent
 
-  def size:Int = 0
+import scala.collection.mutable.ArrayBuffer
+
+trait StateSetComponent {
+  this: StateAttributeComponent=>
+
+  class StateSet {
+    val attributes = new ArrayBuffer[StateAttribute]()
+
+    def size: Int = 0
+
+    var paren: StateSet = null
+
+  }
 
 }
 

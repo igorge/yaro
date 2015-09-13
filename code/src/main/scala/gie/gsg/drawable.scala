@@ -1,6 +1,11 @@
 package gie.gsg
 
-trait Drawable extends WithStateSet {
-  //def bound: BoundingBox = ???
-  //def shape: Shape = ???
+trait DrawableComponent {
+  this: WithStateSetComponent =>
+
+  trait Drawable extends WithStateSet {
+    //def bound: BoundingBox = ???
+    //def shape: Shape = ???
+  }
+
 }

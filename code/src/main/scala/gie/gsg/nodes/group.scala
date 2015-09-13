@@ -3,10 +3,15 @@ package gie.gsg
 import scala.collection.mutable.ArrayBuffer
 
 
-class Group extends Node with WithStateSetImpl {
-  val children = new ArrayBuffer[Node]()
+trait GroupComponent {
+  this: NodeComponent with NodeVisitorComponent with WithStateSetComponent =>
 
-  def accept(visitor: NodeVisitor): Unit ={
-    visitor.visit(this)
+  class Group extends Node with WithStateSetImpl {
+    val children = new ArrayBuffer[Node]()
+
+    def accept(visitor: NodeVisitor): Unit = {
+      visitor.visit(this)
+    }
   }
+
 }

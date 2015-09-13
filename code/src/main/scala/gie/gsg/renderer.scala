@@ -16,6 +16,14 @@ class Renderer[GLType <: Context](val gl: GLType)
   extends RenderContext
   with state_attribute.StateAttributeComponent
   with state_attribute.GlProgramComponent
+  with StateSetComponent
+  with NodeComponent
+  with GroupComponent
+  with TransformComponent
+  with GeodeComponent
+  with DrawableComponent
+  with WithStateSetComponent
+  with NodeVisitorComponent
   with StrictLogging
 { renderer =>
 

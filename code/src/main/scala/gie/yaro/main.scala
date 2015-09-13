@@ -194,6 +194,7 @@ object app extends JSApp with LazyLogging {
 
         val renderer = new gsg.Renderer(gl)
         val renderProg = renderer.attribute.createProgram(program.program)
+        val renderProg2 = renderer.attribute.createProgram(gl.createProgram())
 
 
       val vertexShader = gl.shaderOps(gl.createVertexShader())
@@ -217,6 +218,8 @@ object app extends JSApp with LazyLogging {
 
       //program.use()
         renderProg.apply()
+
+        println(s">> ${renderProg === renderProg2}")
 
       gl.enable(gl.const.BLEND)
       gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)

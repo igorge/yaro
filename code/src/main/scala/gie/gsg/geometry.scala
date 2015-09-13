@@ -1,5 +1,10 @@
 package gie.gsg
 
-trait Geometry extends Drawable {
+trait GeometryComponent {
+  this: DrawableComponent =>
+
+  trait Geometry extends Drawable {
+
+  }
 
 }
