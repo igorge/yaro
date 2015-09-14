@@ -42,26 +42,6 @@ trait Constants {
   val ONE_MINUS_SRC_ALPHA: Int
 }
 
-trait ContextUnbind {
-  gl: Context =>
-
-  @inline def bindNullBuffer(target: Int): Unit={
-    gl.bindBuffer(target, gl.buffer_null)
-  }
-
-  @inline def bindNullTexture(target: Int): Unit={
-    gl.bindTexture(target, gl.texture_null)
-  }
-
-  @inline final def withBoundTexture[T](target: Int, texture: GLTexture)(fun: GLTexture=>T): T = {
-    gl.bindTexture(target, texture)
-    val r = fun(texture)
-    bindNullTexture(target)
-    r
-  }
-
-}
-
 trait Context {
 
   type GLShader

@@ -15,6 +15,10 @@ trait GlProgramComponent {
       gl.useProgram(program)
     }
 
+    def unapply(): Unit ={
+      gl.useNullProgram()
+    }
+
   }
 
 }

@@ -65,8 +65,7 @@ trait StateSetComponent {
       val newSS = new StateSet()
 
       gie.sorted_merge.merge(this, ss, newSS){
-        (l:StateAttribute,r:StateAttribute)=>implicitly[Ordering[Int]].compare(l.index,r.index) }{
-        (l,r)=>l }
+        (l:StateAttribute,r:StateAttribute)=>implicitly[Ordering[Int]].compare(l.index,r.index) }{ (l,r)=>l }
 
 
       assert(newSS.impl_DEBUG_isSorted())

@@ -12,6 +12,7 @@ trait StateAttributeComponent {
 
     def ===(y: StateAttribute): Boolean
     def apply(): Unit
+    def unapply(): Unit
   }
 
 

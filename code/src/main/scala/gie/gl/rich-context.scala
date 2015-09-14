@@ -1,8 +1,32 @@
 package gie.gl
 
 
-trait RichContextCommon {
-  gl: Context with ContextUnbind =>
+trait ContextUnbind {
+  gl: Context =>
+
+  @inline def bindNullBuffer(target: Int): Unit={
+    gl.bindBuffer(target, gl.buffer_null)
+  }
+
+  @inline def bindNullTexture(target: Int): Unit={
+    gl.bindTexture(target, gl.texture_null)
+  }
+
+  @inline def useNullProgram(): Unit ={
+    gl.useProgram(gl.program_null)
+  }
+
+  @inline final def withBoundTexture[T](target: Int, texture: GLTexture)(fun: GLTexture=>T): T = {
+    gl.bindTexture(target, texture)
+    val r = fun(texture)
+    bindNullTexture(target)
+    r
+  }
+
+}
+
+trait RichContextCommon extends ContextUnbind {
+  gl: Context =>
 
   @inline final def createVertexShader(): GLShader =  createShader(const.VERTEX_SHADER)
   @inline final def createFragmentShader(): GLShader =  createShader(const.FRAGMENT_SHADER)
@@ -36,7 +60,7 @@ trait RichContext
   with    RichProgramTrait
   with    RichShaderTrait
   with    RichContextCommon {
-  this: Context with ContextUnbind =>
+  this: Context =>
 
   object uniform {
     @inline final def update(location: UniformTrait, v:Int) = uniform1i(location.get, v)
