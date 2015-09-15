@@ -1,6 +1,7 @@
 package gie.yaro
 
 
+import org.scalajs.dom.raw.WebGLProgram
 import slogging._
 
 
@@ -180,73 +181,104 @@ object app extends JSApp with LazyLogging {
 
 
 
-      val mapToLocations = gl.nameToLocationsMaps()
 
-      val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-      val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
-      val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+      val renderer = new gsg.Renderer(gl)
 
-      val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
-      val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
-      val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+        val programHolder = new renderer.GlProgramHolder {
 
-      val program = gl.Program()
+          val p = gl.Program()
 
-        val renderer = new gsg.Renderer(gl)
-        val renderProg = renderer.attribute.createProgram(program.program)
-        val renderProg2 = renderer.attribute.createProgram(gl.createProgram())
+          val mapToLocations = gl.nameToLocationsMaps()
+
+          val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+          val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+          val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+
+          val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
+          val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
+          val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+
+          val vertexShader = gl.shaderOps(gl.createVertexShader())
+            .source(shaderSource.vertexShader)
+            .compile()
+            .get
+
+          val fragmentShader = gl.shaderOps(gl.createFragmentShader())
+            .source(shaderSource.fragmentShader)
+            .compile()
+            .get
+
+          p
+            .attach(vertexShader)
+            .attach(fragmentShader)
+            .updateAndLink(mapToLocations)
+
+          val program = p.program
+
+          def applied() {
+
+            a_position
+              .bindBuffer(squareBuffer)
+              .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
+
+            a_color
+              .bindBuffer(squareColors)
+              .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
+
+            a_tex_coordinate
+              .bindBuffer(squareTexCoord)
+              .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
+
+            val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+
+            gl.uniformMatrix(u_projection) = projection
+          }
+
+        }
+
+      val attr_program = new renderer.GlProgramAttribute( programHolder)
 
 
-      val vertexShader = gl.shaderOps(gl.createVertexShader())
-        .source(shaderSource.vertexShader)
-        .compile()
-        .get
 
-      val fragmentShader = gl.shaderOps(gl.createFragmentShader())
-        .source(shaderSource.fragmentShader)
-        .compile()
-        .get
-
-      program
-        .attach(vertexShader)
-        .attach(fragmentShader)
-        .updateAndLink(mapToLocations)
 
       gl.viewport(0,0,canvas.width, canvas.height)
       gl.clearColor(0,0,0,1f)
 
 
-      //program.use()
-        renderProg.apply()
-
-        println(s">> ${renderProg === renderProg2}")
+      //program.use()//renderProg.apply()
 
       gl.enable(gl.const.BLEND)
       gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)
-
-      val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
-      gl.uniformMatrix(u_projection) = projection
-
-      a_position
-        .bindBuffer(squareBuffer)
-        .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
-
-      a_color
-        .bindBuffer(squareColors)
-        .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
-
-      a_tex_coordinate
-        .bindBuffer(squareTexCoord)
-        .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
 
 
       gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
 
       var angle = 0f
 
-      gl.uniform(u_texture) = 0
-      gl.activateTexture(gl.const.TEXTURE0)
-      gl.bindTexture(gl.const.TEXTURE_2D, tex1)
+        var delta:Double = 0
+
+        val node = new renderer.OwnerDraw(self=>{
+          gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
+
+          gl.uniform(programHolder.u_texture) = 0
+          gl.activateTexture(gl.const.TEXTURE0)
+          gl.bindTexture(gl.const.TEXTURE_2D, tex1)
+
+          programHolder.a_position.enable()
+          programHolder.a_color.enable()
+          programHolder.a_tex_coordinate.enable()
+
+          val m = Matrix4F.identity()
+          val rotZ = Matrix4F.zero()
+
+          angle+=(delta*1).toFloat
+
+          gl.uniformMatrix(programHolder.u_mv) = m*Matrix4F.rotZ(angle)
+
+          gl.drawArrays(gl.const.TRIANGLES, 0, 6)
+        })
+
+        node.stateSet_!.insert( attr_program )
 
       def tick(oldTime: Long)(t:Double): Unit ={
 
@@ -254,22 +286,10 @@ object app extends JSApp with LazyLogging {
 
         dom.window.requestAnimationFrame(tick(currentTimeNano) _)
 
-        val delta:Double  = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
+        delta = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
 
-        gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
+        renderer.render(node)
 
-        a_position.enable()
-        a_color.enable()
-        a_tex_coordinate.enable()
-
-        val m = Matrix4F.identity()
-        val rotZ = Matrix4F.zero()
-
-        angle+=(delta*1).toFloat
-
-        gl.uniformMatrix(u_mv) = m*Matrix4F.rotZ(angle)
-
-        gl.drawArrays(gl.const.TRIANGLES, 0, 6)
       }
 
       tick(System.nanoTime())(0)

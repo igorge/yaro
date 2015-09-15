@@ -4,6 +4,8 @@ import gie.gl.Context
 import gie.gsg.{RenderContext}
 
 
+
+
 trait StateAttributeComponent {
   this: RenderContext =>
 

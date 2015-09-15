@@ -30,10 +30,6 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
 
   type GLT = GLType
 
-  object attribute {
-    def createProgram(program: gl.GLProgram) = new GlProgram(program)
-  }
-
   private def impl_genSelfStateSet(selfSS: StateSet, parentSS: StateSet): StateSet ={
     if(selfSS eq null) {
       parentSS
@@ -62,14 +58,15 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
 
   private var m_appliedStateSet = new StateSet()
 
-  private def impl_applyStateSet(ss: StateSet): StateSet ={
+  private def impl_applyStateSet(ss: StateSet): Unit={
 
     val newApplied = new StateSet()
 
     def cmp(l: StateAttribute, r: StateAttribute) = implicitly[Ordering[Int]].compare(l.index, r.index)
     def outEq(l: StateAttribute, r: StateAttribute): Unit ={
       if (l === r){
-        logger.debug(s"not re-applying attribute: ${l}")
+        //logger.debug(s"not re-applying attribute: ${l}")
+        newApplied += r
       } else {
         l.apply()
         newApplied += l
@@ -87,7 +84,7 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
 
     gie.sorted_merge.mergedForeachOptSeq(ss, m_appliedStateSet)(cmp)(outEq)(outLeft)(outRight)
 
-    ???
+    m_appliedStateSet = newApplied
   }
 
   def render(node: Node): Unit ={

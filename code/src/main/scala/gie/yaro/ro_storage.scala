@@ -40,9 +40,9 @@ trait RoStoreComponent { this: LoggerHolder with ExecutionContextComponent =>
 
 
     def open(path: String)= {
-      val url = s"${roStorePrefix}${path}"
+      val url = s"${roStorePrefix}${path.replace('\\','/')}"
 
-      logger.debug(url)
+      logger.debug(s"GET ###> ${url}")
 
       val xhr = new dom.XMLHttpRequest()
 
