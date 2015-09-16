@@ -1,6 +1,7 @@
 package gie.gsg
 
 import gie.gl.{ContextUnbind, Context}
+import gie.gsg.state_attribute.StateAttributeVisitorComponent
 import gie.sml.MatrixRead4F
 import slogging.StrictLogging
 
@@ -24,6 +25,7 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
   with OwnerDrawComponent
   with DrawableComponent
   with WithStateSetComponent
+  with StateAttributeVisitorComponent
   with NodeVisitorComponent
   with StrictLogging
 { renderer =>
@@ -57,6 +59,24 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
   }
 
   private var m_appliedStateSet = new StateSet()
+  private var m_activeProgram: GlProgramHolder = null
+  @inline def program = m_activeProgram
+
+  private object applyVisitor extends StateAttributeVisitor {
+    def visit(attr: GlProgramAttribute): Unit={
+      gl.useProgram(attr.m_program)
+      attr.applied()
+      m_activeProgram = attr.programHolder
+    }
+  }
+
+  private object unapplyVisitor extends StateAttributeVisitor {
+    def visit(attr: GlProgramAttribute): Unit={
+      gl.useNullProgram()
+      m_activeProgram = null
+    }
+  }
+
 
   private def impl_applyStateSet(ss: StateSet): Unit={
 
@@ -70,18 +90,18 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
         //logger.debug(s"not re-applying attribute: ${l}")
         newApplied += r
       } else {
-        l.apply()
+        l.accept(applyVisitor)
         newApplied += l
       }
     }
     def outLeft(l: StateAttribute): Unit ={
       logger.debug(s"applying attribute: ${l}")
-      l.apply()
+      l.accept(applyVisitor)
       newApplied += l
     }
     def outRight(r: StateAttribute): Unit ={
       logger.debug(s"unapplying attribute: ${r}")
-      r.unapply()
+      r.accept(unapplyVisitor)
     }
 
     gie.sorted_merge.mergedForeachOptSeq(ss, m_appliedStateSet)(cmp)(outEq)(outLeft)(outRight)

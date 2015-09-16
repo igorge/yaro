@@ -2,35 +2,38 @@ package gie.gsg.state_attribute
 
 import gie.gl.Context
 import gie.gsg.{RenderContext}
+import gie.sml.MatrixRead4F
 import slogging.LoggerHolder
 
 trait GlProgramComponent {
-  this: RenderContext with StateAttributeComponent with LoggerHolder =>
+  this: StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with LoggerHolder =>
 
 
   abstract class GlProgramHolder {
     val program: gl.GLProgram
     def applied(): Unit
+
+    def projectionMatrix: MatrixRead4F = ???
+    def projectionMatrix_=(m:MatrixRead4F): m.type
+
+    def transformationMatrix: MatrixRead4F = ???
+    def transformationMatrix_=(m:MatrixRead4F): m.type
   }
 
   class GlProgramAttribute(programHolderCtor: => GlProgramHolder) extends StateAttribute {
 
-    lazy val m_programHolder: GlProgramHolder = programHolderCtor
+    lazy val programHolder: GlProgramHolder = programHolderCtor
 
-    private def applied(): Unit = m_programHolder.applied()
-    private def m_program = m_programHolder.program
+    private[gsg] def m_program = programHolder.program
 
     final val index = 0
 
     def ===(y: StateAttribute): Boolean = if (index != y.index) false else { m_program == y.asInstanceOf[GlProgramAttribute].m_program }
 
-    def apply(): Unit={
-      gl.useProgram(m_program)
-      applied()
-    }
+    def accept(visitor: StateAttributeVisitor): Unit= visitor.visit(this)
 
-    def unapply(): Unit ={
-      gl.useNullProgram()
+    def applied(): Unit={
+      programHolder.applied()
     }
 
   }

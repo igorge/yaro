@@ -4,17 +4,14 @@ import gie.gl.Context
 import gie.gsg.{RenderContext}
 
 
-
-
 trait StateAttributeComponent {
-  this: RenderContext =>
+  this: StateAttributeVisitorComponent with RenderContext =>
 
   trait StateAttribute{
     val index: Int
 
     def ===(y: StateAttribute): Boolean
-    def apply(): Unit
-    def unapply(): Unit
+    def accept(visitor: StateAttributeVisitor): Unit
   }
 
 

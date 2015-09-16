@@ -150,14 +150,23 @@ object app extends JSApp with LazyLogging {
 
       val renderer = new gsg.Renderer(gl)
 
-      class Holde1 extends renderer.GlProgramHolder {
+      class Holder1 extends renderer.GlProgramHolder {
+
+        def transformationMatrix_=(m:MatrixRead4F): m.type = {
+          gl.uniformMatrix(u_mv) = m
+          m
+        }
+        def projectionMatrix_=(m:MatrixRead4F): m.type = {
+          gl.uniformMatrix(u_projection) = m
+          m
+        }
 
         val p = gl.Program()
 
         val mapToLocations = gl.nameToLocationsMaps()
 
-        val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-        val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+        private val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+        private val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
         val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
         val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
@@ -196,16 +205,13 @@ object app extends JSApp with LazyLogging {
             .bindBuffer(squareTexCoord)
             .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
 
-          val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
-
-          gl.uniformMatrix(u_projection) = projection
-
+          projectionMatrix = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
 
         }
 
       }
 
-      lazy val programHolder = new Holde1
+      lazy val programHolder = new Holder1
 
       val attr_program = new renderer.GlProgramAttribute( programHolder)
 
@@ -274,7 +280,7 @@ object app extends JSApp with LazyLogging {
 
           angle+=(delta*1).toFloat
 
-          gl.uniformMatrix(programHolder.u_mv) = m*Matrix4F.rotZ(angle)
+          renderer.program.transformationMatrix = m*Matrix4F.rotZ(angle)
 
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
