@@ -60,6 +60,8 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
 
   private def impl_applyStateSet(ss: StateSet): Unit={
 
+//    logger.debug("impl_applyStateSet >>>")
+
     val newApplied = new StateSet()
 
     def cmp(l: StateAttribute, r: StateAttribute) = implicitly[Ordering[Int]].compare(l.index, r.index)

@@ -2,9 +2,10 @@ package gie.gsg.state_attribute
 
 import gie.gl.Context
 import gie.gsg.{RenderContext}
+import slogging.LoggerHolder
 
 trait GlProgramComponent {
-  this: RenderContext with StateAttributeComponent =>
+  this: RenderContext with StateAttributeComponent with LoggerHolder =>
 
 
   abstract class GlProgramHolder {

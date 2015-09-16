@@ -126,7 +126,6 @@ object app extends JSApp with LazyLogging {
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
 
-      async {
 
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
@@ -134,37 +133,6 @@ object app extends JSApp with LazyLogging {
       val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.SML_Matrix4FRich {
         //@inline override def checkGlError(): Unit = { /*noop*/ }
       }
-
-
-        def loadTex(path: String, alpha: Int) = async {
-          val (w,h,data) = await(roServices.textureManager.get(path, alpha))
-          gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
-            gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
-            gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
-            gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
-
-            texture
-          }
-        }
-
-
-      def createSolidTexture(r: Byte, g: Byte, b: Byte, a: Byte)={
-
-        val data=Array[Byte](r,g,b,a ,0,-1,0,-1)
-        gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
-          gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, 2, 1, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
-          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
-          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
-
-          texture
-        }
-
-      }
-
-      val tex1 = await(loadTex("내부소품/tor_boom.bmp", 255)) //createSolidTexture(-1,0,0,-1)
-
-     await(roServices.rsmLoader.load("글래지하수로/하수구_라이온1.rsm"))
-
 
       val geom = gie.geom.square(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -180,80 +148,113 @@ object app extends JSApp with LazyLogging {
       )
 
 
-
-
       val renderer = new gsg.Renderer(gl)
 
-        val programHolder = new renderer.GlProgramHolder {
+      class Holde1 extends renderer.GlProgramHolder {
 
-          val p = gl.Program()
+        val p = gl.Program()
 
-          val mapToLocations = gl.nameToLocationsMaps()
+        val mapToLocations = gl.nameToLocationsMaps()
 
-          val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-          val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
-          val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+        val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
+        val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
+        val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
 
-          val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
-          val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
-          val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+        val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
+        val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
+        val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
-          val vertexShader = gl.shaderOps(gl.createVertexShader())
-            .source(shaderSource.vertexShader)
-            .compile()
-            .get
+        val vertexShader = gl.shaderOps(gl.createVertexShader())
+          .source(shaderSource.vertexShader)
+          .compile()
+          .get
 
-          val fragmentShader = gl.shaderOps(gl.createFragmentShader())
-            .source(shaderSource.fragmentShader)
-            .compile()
-            .get
+        val fragmentShader = gl.shaderOps(gl.createFragmentShader())
+          .source(shaderSource.fragmentShader)
+          .compile()
+          .get
 
-          p
-            .attach(vertexShader)
-            .attach(fragmentShader)
-            .updateAndLink(mapToLocations)
+        p
+          .attach(vertexShader)
+          .attach(fragmentShader)
+          .updateAndLink(mapToLocations)
 
-          val program = p.program
+        val program = p.program
 
-          def applied() {
+        def applied() {
 
-            a_position
-              .bindBuffer(squareBuffer)
-              .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
-            a_color
-              .bindBuffer(squareColors)
-              .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
+          a_position
+            .bindBuffer(squareBuffer)
+            .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
-            a_tex_coordinate
-              .bindBuffer(squareTexCoord)
-              .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
+          a_color
+            .bindBuffer(squareColors)
+            .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
 
-            val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+          a_tex_coordinate
+            .bindBuffer(squareTexCoord)
+            .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
 
-            gl.uniformMatrix(u_projection) = projection
-          }
+          val projection = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+
+          gl.uniformMatrix(u_projection) = projection
+
 
         }
 
+      }
+
+      lazy val programHolder = new Holde1
+
       val attr_program = new renderer.GlProgramAttribute( programHolder)
 
+      def loadTex(path: String, alpha: Int) = async {
+        val (w,h,data) = await(roServices.textureManager.get(path, alpha))
+        gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
+          gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
+
+          texture
+        }
+      }
+
+
+      def createSolidTexture(r: Byte, g: Byte, b: Byte, a: Byte)={
+
+        val data=Array[Byte](r,g,b,a ,0,-1,0,-1)
+        gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
+          gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, 2, 1, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
+          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
+
+          texture
+        }
+
+      }
+
+      async {
+
+        val tex1 = await(loadTex("내부소품/tor_boom.bmp", 255)) //createSolidTexture(-1,0,0,-1)
+
+        await(roServices.rsmLoader.load("글래지하수로/하수구_라이온1.rsm"))
 
 
 
-      gl.viewport(0,0,canvas.width, canvas.height)
-      gl.clearColor(0,0,0,1f)
+        gl.viewport(0,0,canvas.width, canvas.height)
+        gl.clearColor(0,0,0,1f)
 
 
-      //program.use()//renderProg.apply()
+        //program.use()//renderProg.apply()
 
-      gl.enable(gl.const.BLEND)
-      gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)
+        gl.enable(gl.const.BLEND)
+        gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)
 
 
-      gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
+        gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
 
-      var angle = 0f
+        var angle = 0f
 
         var delta:Double = 0
 
@@ -280,21 +281,21 @@ object app extends JSApp with LazyLogging {
 
         node.stateSet_!.insert( attr_program )
 
-      def tick(oldTime: Long)(t:Double): Unit ={
+        def tick(oldTime: Long)(t:Double): Unit ={
 
-        val currentTimeNano = System.nanoTime()
+          val currentTimeNano = System.nanoTime()
 
-        dom.window.requestAnimationFrame(tick(currentTimeNano) _)
+          dom.window.requestAnimationFrame(tick(currentTimeNano) _)
 
-        delta = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
+          delta = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
 
-        renderer.render(node)
+          renderer.render(node)
 
-      }
+        }
 
-      tick(System.nanoTime())(0)
+        tick(System.nanoTime())(0)
 
-    }.onComplete( _.get )})
+      }.onComplete( _.get )})
 
 
 
