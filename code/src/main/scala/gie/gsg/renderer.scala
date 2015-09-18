@@ -2,7 +2,7 @@ package gie.gsg
 
 import gie.gl.{ContextUnbind, Context}
 import gie.gsg.state_attribute.StateAttributeVisitorComponent
-import gie.sml.MatrixRead4F
+import gie.sml.{Matrix4F, MatrixRead4F}
 import slogging.StrictLogging
 
 import scala.collection.mutable.ArrayBuffer
@@ -42,18 +42,35 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
     }
   }
 
-  private def impl_renderNode(node: Node, parentMergedStateSet: StateSet): Unit= node match {
-    case n: Transform => ???
+
+  @inline
+  private
+  def impl_deduceTransformation(parent:MatrixRead4F, child:MatrixRead4F) = {
+    import gie.sml.ImplicitOps._
+
+    if(parent eq null) {
+      if(child eq null) m_identity else child
+    } else {
+      if(child eq null) parent else { child * parent }
+    }
+  }
+
+  private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit= node match {
+    case n: Transform =>
+      val selfTransformation = impl_deduceTransformation(transformation, n.m)
+      val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
+      n.children.foreach( impl_renderNode(_, selfSS, selfTransformation) )
 
     case n: Group =>
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
-      n.children.foreach( impl_renderNode(_, selfSS) )
+      n.children.foreach( impl_renderNode(_, selfSS, transformation) )
 
     case n: Geode => ???
 
     case n: OwnerDraw=>
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       impl_applyStateSet(selfSS)
+      m_activeProgram.transformationMatrix = transformation
       n.f(n)
 
   }
@@ -109,8 +126,9 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
     m_appliedStateSet = newApplied
   }
 
+  private val m_identity =  Matrix4F.identity()
   def render(node: Node): Unit ={
-    impl_renderNode(node, null)
+    impl_renderNode(node, null, null)
   }
 
 

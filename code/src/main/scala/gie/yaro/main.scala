@@ -264,6 +264,11 @@ object app extends JSApp with LazyLogging {
 
         var delta:Double = 0
 
+        val rootGroup = renderer.transformation {
+          angle+=(delta*1).toFloat
+          Matrix4F.rotZ(angle)
+        }
+
         val node = new renderer.OwnerDraw(self=>{
           gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
 
@@ -275,17 +280,12 @@ object app extends JSApp with LazyLogging {
           programHolder.a_color.enable()
           programHolder.a_tex_coordinate.enable()
 
-          val m = Matrix4F.identity()
-          val rotZ = Matrix4F.zero()
-
-          angle+=(delta*1).toFloat
-
-          renderer.program.transformationMatrix = m*Matrix4F.rotZ(angle)
-
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
 
-        node.stateSet_!.insert( attr_program )
+        node.addAttribute( attr_program )
+
+        rootGroup.children += node
 
         def tick(oldTime: Long)(t:Double): Unit ={
 
@@ -295,7 +295,7 @@ object app extends JSApp with LazyLogging {
 
           delta = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
 
-          renderer.render(node)
+          renderer.render(rootGroup)
 
         }
 
