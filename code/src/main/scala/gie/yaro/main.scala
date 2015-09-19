@@ -153,32 +153,32 @@ object app extends JSApp with LazyLogging {
       class Holder1 extends renderer.GlProgramHolder {
 
         def transformationMatrix_=(m:MatrixRead4F): m.type = {
-          gl.uniformMatrix(u_mv) = m
+          renderer.gl.uniformMatrix(u_mv) = m
           m
         }
         def projectionMatrix_=(m:MatrixRead4F): m.type = {
-          gl.uniformMatrix(u_projection) = m
+          renderer.gl.uniformMatrix(u_projection) = m
           m
         }
 
-        val p = gl.Program()
+        val p = renderer.gl.Program()
 
-        val mapToLocations = gl.nameToLocationsMaps()
+        val mapToLocations = renderer.gl.nameToLocationsMaps()
 
-        private val u_mv = gl.Uniform("u_mv", mapToLocations.uniforms)
-        private val u_projection = gl.Uniform("u_projection", mapToLocations.uniforms)
-        val u_texture = gl.Uniform("u_texture", mapToLocations.uniforms)
+        private val u_mv = renderer.gl.Uniform("u_mv", mapToLocations.uniforms)
+        private val u_projection = renderer.gl.Uniform("u_projection", mapToLocations.uniforms)
+        val u_texture = renderer.gl.Uniform("u_texture", mapToLocations.uniforms)
 
-        val a_position = gl.VertexAttribute("a_position", mapToLocations.attributes)
-        val a_color = gl.VertexAttribute("a_color", mapToLocations.attributes)
-        val a_tex_coordinate = gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+        val a_position = renderer.gl.VertexAttribute("a_position", mapToLocations.attributes)
+        val a_color = renderer.gl.VertexAttribute("a_color", mapToLocations.attributes)
+        val a_tex_coordinate = renderer.gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
 
-        val vertexShader = gl.shaderOps(gl.createVertexShader())
+        val vertexShader = renderer.gl.shaderOps(gl.createVertexShader())
           .source(shaderSource.vertexShader)
           .compile()
           .get
 
-        val fragmentShader = gl.shaderOps(gl.createFragmentShader())
+        val fragmentShader = renderer.gl.shaderOps(gl.createFragmentShader())
           .source(shaderSource.fragmentShader)
           .compile()
           .get
@@ -206,6 +206,8 @@ object app extends JSApp with LazyLogging {
             .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
 
           projectionMatrix = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+
+          renderer.gl.uniform(u_texture) = 1 //DEBUG
 
         }
 
@@ -272,7 +274,7 @@ object app extends JSApp with LazyLogging {
         val node = new renderer.OwnerDraw(self=>{
           gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
 
-          gl.uniform(programHolder.u_texture) = 0
+          //renderer.gl.uniform(programHolder.u_texture) = 0
 
           programHolder.a_position.enable()
           programHolder.a_color.enable()
@@ -284,6 +286,7 @@ object app extends JSApp with LazyLogging {
         node
           .addAttribute( attr_program )
           .addAttribute(new renderer.Texture2D(tex1,0))
+          .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
 
         rootGroup.children += node
 

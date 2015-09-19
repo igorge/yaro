@@ -6,17 +6,19 @@ trait RichUniformTrait { this: Context =>
 
   trait UniformTrait {
     var location: GLUniformLocation
-    @inline def get = location
+    val name: String
+    @inline final def get = location
+    @inline final def apply() = location
   }
 
-  class Uniform extends UniformTrait {
+  class Uniform(val name: String) extends UniformTrait {
     var location: GLUniformLocation = uniformLocation_null
   }
 
   object Uniform {
-    def apply(): Uniform = new Uniform()
+    def apply(name: String): Uniform = new Uniform(name)
     def apply(name: String, m: scala.collection.mutable.Map[String, UniformTrait]) = {
-      val uniform = new Uniform()
+      val uniform = new Uniform(name)
       m.put(name, uniform)
       uniform
     }

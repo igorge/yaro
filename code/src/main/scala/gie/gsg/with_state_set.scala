@@ -1,15 +1,19 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.StateAttributeComponent
+import gie.gsg.state_attribute.{UniformLocationComponent, StateAttributeComponent}
 
 trait WithStateSetComponent {
-  this: StateSetComponent with StateAttributeComponent =>
+  this: StateSetComponent with StateAttributeComponent with UniformLocationComponent =>
 
   trait WithStateSet {
     def stateSet: StateSet
     def stateSet_! : StateSet
     def addAttribute(attr: StateAttribute): this.type={
-      stateSet_!.insert(attr)
+      stateSet_!.addAttribute(attr)
+      this
+    }
+    def addUniformValue(uniform: UniformValueAttribute): this.type={
+      stateSet_!.addUniformValue(uniform)
       this
     }
   }

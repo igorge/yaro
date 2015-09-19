@@ -1,6 +1,6 @@
 package gie.gsg
 
-import gie.gl.{ContextUnbind, Context}
+import gie.gl.{RichContext, RichUniformTrait, ContextUnbind, Context}
 import gie.gsg.state_attribute.StateAttributeVisitorComponent
 import gie.sml.{Matrix4F, MatrixRead4F}
 import slogging.StrictLogging
@@ -9,15 +9,16 @@ import scala.collection.mutable.ArrayBuffer
 
 
 trait RenderContext {
-  type GLT <: Context with ContextUnbind
+  type GLT <: Context with ContextUnbind with RichContext
   val gl: GLT
 }
 
-class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
+class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GLType)
   extends RenderContext
   with state_attribute.StateAttributeComponent
   with state_attribute.GlProgramComponent
   with state_attribute.Texture2DComponent
+  with state_attribute.UniformLocationComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
@@ -106,33 +107,61 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
 
   private def impl_applyStateSet(ss: StateSet): Unit={
 
-//    logger.debug("impl_applyStateSet >>>")
-
     val newApplied = new StateSet()
+
+    impl_applyStateSet_attributes(ss, newApplied)
+    impl_applyStateSet_uniforms(ss, newApplied)
+
+    m_appliedStateSet = newApplied
+  }
+
+  private def impl_applyStateSet_uniforms(ss: StateSet, newApplied: StateSet): Unit={
+
+    def outEq(l: UniformValueAttribute, r: UniformValueAttribute): Unit ={
+      if (l === r){
+        //logger.debug(s"not re-applying attribute: ${l}")
+        newApplied.uniforms_! += r
+      } else {
+        logger.debug(s"applying uniform: ${l}")
+        l.applyUniform()
+        newApplied.uniforms_! += l
+      }
+    }
+    def outLeft(l: UniformValueAttribute): Unit ={
+      logger.debug(s"applying uniform: ${l}")
+      l.applyUniform()
+      newApplied.uniforms_! += l
+    }
+    def outRight(r: UniformValueAttribute): Unit ={ /* do not 'unset' uniform values */  }
+
+    gie.sorted_merge.mergedForeachOptSeq(ss.uniforms, m_appliedStateSet.uniforms)(UniformValueAttribute.orderingCmp)(outEq)(outLeft)(outRight)
+
+  }
+
+  private def impl_applyStateSet_attributes(ss: StateSet, newApplied: StateSet): Unit={
 
     def cmp(l: StateAttribute, r: StateAttribute) = implicitly[Ordering[Int]].compare(l.index, r.index)
     def outEq(l: StateAttribute, r: StateAttribute): Unit ={
       if (l === r){
         //logger.debug(s"not re-applying attribute: ${l}")
-        newApplied += r
+        newApplied.m_attributes += r
       } else {
+        logger.debug(s"applying attribute: ${l}")
         l.accept(applyVisitor)
-        newApplied += l
+        newApplied.m_attributes += l
       }
     }
     def outLeft(l: StateAttribute): Unit ={
       logger.debug(s"applying attribute: ${l}")
       l.accept(applyVisitor)
-      newApplied += l
+      newApplied.m_attributes += l
     }
     def outRight(r: StateAttribute): Unit ={
       logger.debug(s"unapplying attribute: ${r}")
       r.accept(unapplyVisitor)
     }
 
-    gie.sorted_merge.mergedForeachOptSeq(ss, m_appliedStateSet)(cmp)(outEq)(outLeft)(outRight)
-
-    m_appliedStateSet = newApplied
+    gie.sorted_merge.mergedForeachOptSeq(ss.m_attributes, m_appliedStateSet.m_attributes)(cmp)(outEq)(outLeft)(outRight)
   }
 
   private val m_identity =  Matrix4F.identity()

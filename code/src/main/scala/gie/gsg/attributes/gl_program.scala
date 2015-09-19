@@ -6,10 +6,10 @@ import gie.sml.MatrixRead4F
 import slogging.LoggerHolder
 
 trait GlProgramComponent {
-  this: StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with LoggerHolder =>
+  this: StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with UniformLocationComponent with LoggerHolder =>
 
 
-  abstract class GlProgramHolder {
+  abstract class GlProgramHolder { programHolder=>
     val program: gl.GLProgram
     def applied(): Unit
 
@@ -18,6 +18,16 @@ trait GlProgramComponent {
 
     def transformationMatrix: MatrixRead4F = ???
     def transformationMatrix_=(m:MatrixRead4F): m.type
+
+    @inline def constUniformValue(ul: gl.UniformTrait)(v: Int): ConstUniformValueAttribute[Int] ={
+      new ConstUniformValueAttribute[Int](programHolder, ul, v){
+        def applyUniform(): Unit ={
+          gl.uniform(uniformLocation) = m_value
+        }
+      }
+    }
+
+
   }
 
   class GlProgramAttribute(programHolderCtor: => GlProgramHolder) extends StateAttribute {
