@@ -4,7 +4,7 @@ trait NodeComponent {
   this: WithStateSetComponent with NodeVisitorComponent =>
 
   trait Node extends WithStateSet {
-    def accept(visitor: NodeVisitor): Unit
+    //def accept(visitor: NodeVisitor): Unit
   }
 
 }

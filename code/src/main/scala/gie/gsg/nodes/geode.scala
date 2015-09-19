@@ -10,9 +10,9 @@ trait GeodeComponent {
 
     val drawables = new ArrayBuffer[Drawable]()
 
-    def accept(visitor: NodeVisitor): Unit = {
-      visitor.visit(this)
-    }
+//    def accept(visitor: NodeVisitor): Unit = {
+//      visitor.visit(this)
+//    }
 
   }
 

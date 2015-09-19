@@ -19,9 +19,9 @@ trait GroupComponent {
     @inline def apply(idx: Int) = children.apply(idx)
     @inline def length = children.length
 
-    def accept(visitor: NodeVisitor): Unit = {
-      visitor.visit(this)
-    }
+//    def accept(visitor: NodeVisitor): Unit = {
+//      visitor.visit(this)
+//    }
   }
 
 }

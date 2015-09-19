@@ -9,9 +9,9 @@ trait TransformComponent {
 
     def m: MatrixRead4F
 
-    override def accept(visitor: NodeVisitor): Unit = {
-      visitor.visit(this)
-    }
+//    override def accept(visitor: NodeVisitor): Unit = {
+//      visitor.visit(this)
+//    }
   }
 
   class TransformMatrix(private var m_m: MatrixRead4F){
