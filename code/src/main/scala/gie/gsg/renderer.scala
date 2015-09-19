@@ -17,6 +17,7 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
   extends RenderContext
   with state_attribute.StateAttributeComponent
   with state_attribute.GlProgramComponent
+  with state_attribute.Texture2DComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
@@ -85,12 +86,20 @@ class Renderer[GLType <: Context with ContextUnbind](val gl: GLType)
       attr.applied()
       m_activeProgram = attr.programHolder
     }
+    def visit(attr: Texture2D): Unit ={
+      gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)
+      gl.bindTexture(gl.const.TEXTURE_2D, attr.m_texture)
+    }
   }
 
   private object unapplyVisitor extends StateAttributeVisitor {
     def visit(attr: GlProgramAttribute): Unit={
       gl.useNullProgram()
       m_activeProgram = null
+    }
+    def visit(attr: Texture2D): Unit ={
+      gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)
+      gl.bindNullTexture(gl.const.TEXTURE_2D)
     }
   }
 

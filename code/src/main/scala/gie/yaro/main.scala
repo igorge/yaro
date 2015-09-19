@@ -273,8 +273,6 @@ object app extends JSApp with LazyLogging {
           gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
 
           gl.uniform(programHolder.u_texture) = 0
-          gl.activateTexture(gl.const.TEXTURE0)
-          gl.bindTexture(gl.const.TEXTURE_2D, tex1)
 
           programHolder.a_position.enable()
           programHolder.a_color.enable()
@@ -283,7 +281,9 @@ object app extends JSApp with LazyLogging {
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
 
-        node.addAttribute( attr_program )
+        node
+          .addAttribute( attr_program )
+          .addAttribute(new renderer.Texture2D(tex1,0))
 
         rootGroup.children += node
 
