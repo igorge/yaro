@@ -13,7 +13,7 @@ trait WithStateSetComponent {
       this
     }
     def addUniformValue(uniform: UniformValueAttribute): this.type={
-      stateSet_!.addUniformValue(uniform)
+      stateSet_!.addVariableValue(uniform)
       this
     }
   }

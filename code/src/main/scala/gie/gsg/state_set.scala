@@ -1,6 +1,6 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.{UniformLocationComponent, StateAttributeComponent}
+import gie.gsg.state_attribute.{ShaderVariableComponent, UniformLocationComponent, StateAttributeComponent}
 import gie.search.binarySearch
 
 import scala.collection.Searching.{SearchResult, Found, InsertionPoint}
@@ -9,30 +9,30 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 
 trait StateSetComponent {
-  this: StateAttributeComponent with UniformLocationComponent =>
+  this: ShaderVariableComponent with StateAttributeComponent with UniformLocationComponent =>
 
   // Growable += simply appends at the end of array buffer with ordering enforcement
   // use insert() for set-like element insertion
   //
   class StateSet {
     private[gsg] val m_attributes = new ArrayBuffer[StateAttribute]()
-    private var m_uniforms:ArrayBuffer[UniformValueAttribute] = null
+    private var m_variables:ArrayBuffer[ShaderVariableAttribute] = null
 
-    private def impl_allocUniforms() = {
-      m_uniforms = new ArrayBuffer[UniformValueAttribute]()
-      m_uniforms
+    private def impl_allocVariables() = {
+      m_variables = new ArrayBuffer[ShaderVariableAttribute]()
+      m_variables
     }
 
     @inline
-    private [gsg] def uniforms_! = if(m_uniforms eq null) impl_allocUniforms() else m_uniforms
+    private [gsg] def variables_! = if(m_variables eq null) impl_allocVariables() else m_variables
     @inline
-    private [gsg] def uniforms = m_uniforms
+    private [gsg] def variables = m_variables
 
 
 
     def clear(){
       m_attributes.clear()
-      Option(m_uniforms) foreach (_.clear())
+      Option(m_variables) foreach (_.clear())
     }
 
     def attributes: collection.IndexedSeq[StateAttribute] = m_attributes
@@ -65,13 +65,13 @@ trait StateSetComponent {
       this
     }
 
-    def addUniformValue(u: UniformValueAttribute): this.type={
-      if(m_uniforms eq null){
-        impl_allocUniforms() += u
+    def addVariableValue(u: UniformValueAttribute): this.type={
+      if(m_variables eq null){
+        impl_allocVariables() += u
       } else {
-        binarySearch(u.name, m_uniforms){ (key, uniform)=> implicitly[Ordering[String]].compare(key, uniform.name) } match {
-          case Found(index) => throw new Exception(s"StateSet already has uniform with name '${u.name}.")
-          case InsertionPoint(index) => m_uniforms.insert(index, u)
+        binarySearch(u.name, m_variables){ (key, uniform)=> implicitly[Ordering[String]].compare(key, uniform.name) } match {
+          case Found(index) => throw new Exception(s"StateSet already has uniform/attribute with name '${u.name}.")
+          case InsertionPoint(index) => m_variables.insert(index, u)
         }
       }
       this
@@ -89,17 +89,17 @@ trait StateSetComponent {
 
     private def impl_mergeCopyWithParent_uniforms(newSS: StateSet, parentSS: StateSet): Unit={
 
-      if(m_uniforms eq null){
-        if(parentSS.m_uniforms eq null){
+      if(m_variables eq null){
+        if(parentSS.m_variables eq null){
           //do nothing
         } else {
-          newSS.m_uniforms ++= parentSS.m_uniforms
+          newSS.m_variables ++= parentSS.m_variables
         }
       } else {
-        if(parentSS.m_uniforms eq null) {
-          newSS.m_uniforms ++= m_uniforms
+        if(parentSS.m_variables eq null) {
+          newSS.m_variables ++= m_variables
         } else {
-          gie.sorted_merge.merge(this.m_uniforms, parentSS.m_uniforms, newSS.m_uniforms){ UniformValueAttribute.orderingCmp }{ (l,r)=>l }
+          gie.sorted_merge.merge(this.m_variables, parentSS.m_variables, newSS.m_variables){ ShaderVariableAttribute.orderingCmp }{ (l,r)=>l }
         }
       }
 

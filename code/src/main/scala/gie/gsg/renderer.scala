@@ -19,6 +19,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with state_attribute.GlProgramComponent
   with state_attribute.Texture2DComponent
   with state_attribute.UniformLocationComponent
+  with state_attribute.ShaderVariableComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
@@ -117,24 +118,27 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
   private def impl_applyStateSet_uniforms(ss: StateSet, newApplied: StateSet): Unit={
 
-    def outEq(l: UniformValueAttribute, r: UniformValueAttribute): Unit ={
+    def outEq(l: ShaderVariableAttribute, r: ShaderVariableAttribute): Unit ={
       if (l === r){
         //logger.debug(s"not re-applying attribute: ${l}")
-        newApplied.uniforms_! += r
+        newApplied.variables_! += r
       } else {
-        logger.debug(s"applying uniform: ${l}")
-        l.applyUniform()
-        newApplied.uniforms_! += l
+        logger.debug(s"applying uniform/attribute: ${l}")
+        l.apply()
+        newApplied.variables_! += l
       }
     }
-    def outLeft(l: UniformValueAttribute): Unit ={
-      logger.debug(s"applying uniform: ${l}")
-      l.applyUniform()
-      newApplied.uniforms_! += l
+    def outLeft(l: ShaderVariableAttribute): Unit ={
+      logger.debug(s"applying uniform/attribute: ${l}")
+      l.apply()
+      newApplied.variables_! += l
     }
-    def outRight(r: UniformValueAttribute): Unit ={ /* do not 'unset' uniform values */  }
+    def outRight(r: ShaderVariableAttribute): Unit ={
+      logger.debug(s"unapplying uniform/attribute: ${r}")
+      r.unapply()
+    }
 
-    gie.sorted_merge.mergedForeachOptSeq(ss.uniforms, m_appliedStateSet.uniforms)(UniformValueAttribute.orderingCmp)(outEq)(outLeft)(outRight)
+    gie.sorted_merge.mergedForeachOptSeq(ss.variables, m_appliedStateSet.variables)(ShaderVariableAttribute.orderingCmp)(outEq)(outLeft)(outRight)
 
   }
 

@@ -4,27 +4,23 @@ import gie.gsg.{RenderContext}
 
 
 trait UniformLocationComponent {
-  this: RenderContext with StateAttributeComponent with GlProgramComponent =>
+  this: RenderContext with StateAttributeComponent with GlProgramComponent with ShaderVariableComponent =>
 
-  trait UniformValueAttribute {
+  trait UniformValueAttribute extends ShaderVariableAttribute {
     val uniformLocation: gl.UniformTrait
     val uniformProgram: GlProgramHolder
 
     @inline final def name:String = uniformLocation.name
     @inline final def location:gl.GLUniformLocation = uniformLocation.location
 
-    def ===(y: UniformValueAttribute): Boolean
-    def applyUniform(): Unit
-  }
-
-  object UniformValueAttribute {
-    @inline def orderingCmp(l: UniformValueAttribute, r: UniformValueAttribute) = implicitly[Ordering[String]].compare(l.name, r.name)
+    def apply(): Unit
+    def unapply(): Unit={/* do nothing*/}
   }
 
   abstract class ConstUniformValueAttribute[T](val uniformProgram: GlProgramHolder, val uniformLocation: gl.UniformTrait, v: => T) extends UniformValueAttribute {
     protected lazy val m_value = v
 
-    def ===(y: UniformValueAttribute): Boolean = {
+    def ===(y: ShaderVariableAttribute): Boolean = {
       assume(name==y.name) //TODO: remove
 
       if (name != y.name || !y.isInstanceOf[ConstUniformValueAttribute[_]]) {
@@ -35,7 +31,7 @@ trait UniformLocationComponent {
       }
     }
 
-    def applyUniform(): Unit
+    def apply(): Unit
 
     override def toString() = s"ConstUniformValueAttribute(${uniformLocation.name} @ ${uniformLocation.location}, ${m_value})"
 

@@ -6,7 +6,7 @@ import gie.sml.MatrixRead4F
 import slogging.LoggerHolder
 
 trait GlProgramComponent {
-  this: StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with UniformLocationComponent with LoggerHolder =>
+  this: ShaderVariableComponent with StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with UniformLocationComponent with LoggerHolder =>
 
 
   abstract class GlProgramHolder { programHolder=>
@@ -21,7 +21,7 @@ trait GlProgramComponent {
 
     @inline def constUniformValue(ul: gl.UniformTrait)(v: Int): ConstUniformValueAttribute[Int] ={
       new ConstUniformValueAttribute[Int](programHolder, ul, v){
-        def applyUniform(): Unit ={
+        def apply(): Unit ={
           gl.uniform(uniformLocation) = m_value
         }
       }
