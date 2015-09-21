@@ -3,7 +3,7 @@ package gie.gsg.state_attribute
 import gie.gsg.{RenderContext}
 
 
-trait UniformLocationComponent {
+trait UniformValueAttributeComponent {
   this: RenderContext with StateAttributeComponent with GlProgramComponent with ShaderVariableComponent =>
 
   trait UniformValueAttribute extends ShaderVariableAttribute {
@@ -15,6 +15,7 @@ trait UniformLocationComponent {
 
     def apply(): Unit
     def unapply(): Unit={/* do nothing*/}
+
   }
 
   abstract class ConstUniformValueAttribute[T](val uniformProgram: GlProgramHolder, val uniformLocation: gl.UniformTrait, v: => T) extends UniformValueAttribute {

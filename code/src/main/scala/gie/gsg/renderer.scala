@@ -18,9 +18,9 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with state_attribute.StateAttributeComponent
   with state_attribute.GlProgramComponent
   with state_attribute.Texture2DComponent
-  with state_attribute.UniformLocationComponent
+  with state_attribute.UniformValueAttributeComponent
   with state_attribute.ShaderVariableComponent
-  with state_attribute.GlAttributeComponent
+  with state_attribute.VertexAttributeAttributeComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
@@ -116,6 +116,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
     m_appliedStateSet = newApplied
   }
+
 
   private def impl_applyStateSet_uniforms(ss: StateSet, newApplied: StateSet): Unit={
 

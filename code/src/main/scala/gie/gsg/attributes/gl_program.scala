@@ -6,7 +6,7 @@ import gie.sml.MatrixRead4F
 import slogging.LoggerHolder
 
 trait GlProgramComponent {
-  this: ShaderVariableComponent with StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with UniformLocationComponent with LoggerHolder =>
+  this: ShaderVariableComponent with StateAttributeVisitorComponent with RenderContext with StateAttributeComponent with UniformValueAttributeComponent with LoggerHolder =>
 
 
   abstract class GlProgramHolder { programHolder=>

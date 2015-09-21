@@ -1,6 +1,6 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.{ShaderVariableComponent, UniformLocationComponent, StateAttributeComponent}
+import gie.gsg.state_attribute.{ShaderVariableComponent, UniformValueAttributeComponent, StateAttributeComponent}
 import gie.search.binarySearch
 
 import scala.collection.Searching.{SearchResult, Found, InsertionPoint}
@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 
 trait StateSetComponent {
-  this: ShaderVariableComponent with StateAttributeComponent with UniformLocationComponent =>
+  this: ShaderVariableComponent with StateAttributeComponent with UniformValueAttributeComponent =>
 
   // Growable += simply appends at the end of array buffer with ordering enforcement
   // use insert() for set-like element insertion

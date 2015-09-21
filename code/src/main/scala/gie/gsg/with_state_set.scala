@@ -1,9 +1,9 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.{GlAttributeComponent, UniformLocationComponent, StateAttributeComponent}
+import gie.gsg.state_attribute.{VertexAttributeAttributeComponent, UniformValueAttributeComponent, StateAttributeComponent}
 
 trait WithStateSetComponent {
-  this: RenderContext with StateSetComponent with StateAttributeComponent with UniformLocationComponent with GlAttributeComponent=>
+  this: RenderContext with StateSetComponent with StateAttributeComponent with UniformValueAttributeComponent with VertexAttributeAttributeComponent=>
 
   trait WithStateSet {
     def stateSet: StateSet
@@ -20,7 +20,9 @@ trait WithStateSetComponent {
       stateSet_!.addVariableValue(attr)
       this
     }
-    def addVertexAttributeValue(attr: gl.VertexAttribute): this.type=addVertexAttributeValue( new VertexAttributeAttribute(attr) )
+    def addVertexAttributeValue(vertexAttr:gl.VertexAttribute, componentSize: Int, componentType: Int, stride: Int, offset: Int)(lazyBuffer: => gl.GLBuffer): this.type={
+      addVertexAttributeValue( new VertexAttributeAttribute(vertexAttr, ()=>lazyBuffer, componentSize, componentType, stride, offset) )
+    }
   }
 
   trait WithStateSetImpl {

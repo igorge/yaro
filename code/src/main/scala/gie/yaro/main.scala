@@ -191,24 +191,8 @@ object app extends JSApp with LazyLogging {
         val program = p.program
 
         def applied() {
-
-
-          a_position
-            .bindBuffer(squareBuffer)
-            .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
-
-          a_color
-            .bindBuffer(squareColors)
-            .vertexAttribPointer(3, gl.const.FLOAT, true, 0, 0)
-
-          a_tex_coordinate
-            .bindBuffer(squareTexCoord)
-            .vertexAttribPointer(2, gl.const.FLOAT, true, 0, 0)
-
           projectionMatrix = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
-
           renderer.gl.uniform(u_texture) = 1 //DEBUG
-
         }
 
       }
@@ -272,14 +256,6 @@ object app extends JSApp with LazyLogging {
         }
 
         val node = new renderer.OwnerDraw(self=>{
-          gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
-
-          //renderer.gl.uniform(programHolder.u_texture) = 0
-
-//          programHolder.a_position.enable()
-//          programHolder.a_color.enable()
-          //programHolder.a_tex_coordinate.enable()
-
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
 
@@ -287,9 +263,9 @@ object app extends JSApp with LazyLogging {
           .addAttribute( attr_program )
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
-          .addVertexAttributeValue( programHolder.a_position )
-          .addVertexAttributeValue( programHolder.a_color )
-          .addVertexAttributeValue( programHolder.a_tex_coordinate )
+          .addVertexAttributeValue( programHolder.a_position, 3, gl.const.FLOAT, 0, 0 ){squareBuffer}
+          .addVertexAttributeValue( programHolder.a_color,3, gl.const.FLOAT,  0, 0 ){squareColors}
+          .addVertexAttributeValue( programHolder.a_tex_coordinate,2, gl.const.FLOAT, 0, 0 ){squareTexCoord}
 
         rootGroup.children += node
 
@@ -301,6 +277,7 @@ object app extends JSApp with LazyLogging {
 
           delta = (currentTimeNano-oldTime).toDouble / NANOS_IN_SEC
 
+          gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
           renderer.render(rootGroup)
 
         }
