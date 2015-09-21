@@ -10,7 +10,7 @@ trait VertexAttributeAttributeComponent {
     lazy val buffer = bufferFun()
     def name = vertexAttr.name
 
-    def apply(): Unit={
+    def apply(from: ShaderVariableAttribute): Unit={
       vertexAttr.bindBuffer(buffer).vertexAttribPointer(componentSize, componentType, true, stride, offset).enable()
     }
     def unapply(): Unit={

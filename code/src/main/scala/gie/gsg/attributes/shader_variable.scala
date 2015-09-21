@@ -11,7 +11,7 @@ trait ShaderVariableComponent {
     def name:String
 
     def ===(y: ShaderVariableAttribute): Boolean
-    def apply(): Unit
+    def apply(from: ShaderVariableAttribute): Unit
     def unapply(): Unit
   }
 

@@ -21,7 +21,7 @@ trait GlProgramComponent {
 
     @inline def constUniformValue(ul: gl.UniformTrait)(v: Int): ConstUniformValueAttribute[Int] ={
       new ConstUniformValueAttribute[Int](programHolder, ul, v){
-        def apply(): Unit ={
+        def apply(from: ShaderVariableAttribute): Unit ={
           gl.uniform(uniformLocation) = m_value
         }
       }

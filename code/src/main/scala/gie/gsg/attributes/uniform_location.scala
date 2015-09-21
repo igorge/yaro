@@ -13,7 +13,7 @@ trait UniformValueAttributeComponent {
     @inline final def name:String = uniformLocation.name
     @inline final def location:gl.GLUniformLocation = uniformLocation.location
 
-    def apply(): Unit
+    def apply(from: ShaderVariableAttribute): Unit
     def unapply(): Unit={/* do nothing*/}
 
   }
@@ -32,7 +32,7 @@ trait UniformValueAttributeComponent {
       }
     }
 
-    def apply(): Unit
+//    def apply(from: ShaderVariableAttribute): Unit
 
     override def toString() = s"ConstUniformValueAttribute(${uniformLocation.name} @ ${uniformLocation.location}, ${m_value})"
 

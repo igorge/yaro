@@ -126,13 +126,13 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
         newApplied.variables_! += r
       } else {
         logger.debug(s"applying uniform/attribute: ${l}")
-        l.apply()
+        l.apply(r)
         newApplied.variables_! += l
       }
     }
     def outLeft(l: ShaderVariableAttribute): Unit ={
       logger.debug(s"applying uniform/attribute: ${l}")
-      l.apply()
+      l.apply(null)
       newApplied.variables_! += l
     }
     def outRight(r: ShaderVariableAttribute): Unit ={
