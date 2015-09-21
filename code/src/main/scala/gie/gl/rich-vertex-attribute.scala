@@ -33,14 +33,14 @@ trait RichVertexAttributeTrait {
 
   }
 
-  class VertexAttribute extends VertexAttributeApiTrait {
+  class VertexAttribute(val name: String) extends VertexAttributeApiTrait {
     var location: GLVertexAttributeLocation = vertexAttributeLocation_null
   }
 
   object VertexAttribute {
-    def apply(): VertexAttribute = new VertexAttribute()
+    def apply(name: String): VertexAttribute = new VertexAttribute(name)
     def apply(name: String, m: scala.collection.mutable.Map[String, VertexAttributeApiTrait]) = {
-      val uniform = new VertexAttribute()
+      val uniform = new VertexAttribute(name)
       m.put(name, uniform)
       uniform
     }

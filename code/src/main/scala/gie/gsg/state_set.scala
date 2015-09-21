@@ -65,7 +65,7 @@ trait StateSetComponent {
       this
     }
 
-    def addVariableValue(u: UniformValueAttribute): this.type={
+    def addVariableValue(u: ShaderVariableAttribute): this.type={
       if(m_variables eq null){
         impl_allocVariables() += u
       } else {

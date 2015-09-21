@@ -276,9 +276,9 @@ object app extends JSApp with LazyLogging {
 
           //renderer.gl.uniform(programHolder.u_texture) = 0
 
-          programHolder.a_position.enable()
-          programHolder.a_color.enable()
-          programHolder.a_tex_coordinate.enable()
+//          programHolder.a_position.enable()
+//          programHolder.a_color.enable()
+          //programHolder.a_tex_coordinate.enable()
 
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
@@ -287,6 +287,9 @@ object app extends JSApp with LazyLogging {
           .addAttribute( attr_program )
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+          .addVertexAttributeValue( programHolder.a_position )
+          .addVertexAttributeValue( programHolder.a_color )
+          .addVertexAttributeValue( programHolder.a_tex_coordinate )
 
         rootGroup.children += node
 

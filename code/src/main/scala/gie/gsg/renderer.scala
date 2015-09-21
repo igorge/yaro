@@ -20,6 +20,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with state_attribute.Texture2DComponent
   with state_attribute.UniformLocationComponent
   with state_attribute.ShaderVariableComponent
+  with state_attribute.GlAttributeComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
