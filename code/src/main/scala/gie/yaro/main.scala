@@ -263,9 +263,9 @@ object app extends JSApp with LazyLogging {
           .addAttribute( attr_program )
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
-          .addVertexAttributeValue( programHolder.a_position, 3, gl.const.FLOAT, 0, 0 ){squareBuffer}
-          .addVertexAttributeValue( programHolder.a_color,3, gl.const.FLOAT,  0, 0 ){squareColors}
-          .addVertexAttributeValue( programHolder.a_tex_coordinate,2, gl.const.FLOAT, 0, 0 ){squareTexCoord}
+          .addVertexAttributeValue( programHolder.a_position, 3, gl.const.FLOAT){squareBuffer}
+          .addVertexAttributeValue( programHolder.a_color,3, gl.const.FLOAT){squareColors}
+          .addVertexAttributeValue( programHolder.a_tex_coordinate,2, gl.const.FLOAT ){squareTexCoord}
 
         rootGroup.children += node
 
