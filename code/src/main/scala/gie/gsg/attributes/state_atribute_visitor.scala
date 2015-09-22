@@ -3,7 +3,7 @@ package gie.gsg.state_attribute
 
 
 trait StateAttributeVisitorComponent {
-  this: StateAttributeComponent with GlProgramComponent with Texture2DComponent =>
+  this: StateAttributeComponent with GlProgramAttributeComponent with Texture2DComponent =>
 
   trait StateAttributeVisitor {
     def visit(attr: GlProgramAttribute): Unit

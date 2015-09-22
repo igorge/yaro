@@ -1,12 +1,17 @@
 package gie.gl
 
-trait RichVertexAttributeTrait {
-  self: Context with RichContextCommon =>
+import slogging.LoggerHolder
+
+trait RichVertexAttributeComponent {
+  self: Context with RichContextCommon with LoggerHolder =>
 
   type AttributeMapType = scala.collection.Map[String, VertexAttributeApiTrait]
 
   trait VertexAttributeApiTrait {
-    var location: GLVertexAttributeLocation
+    val name: String
+    var location: GLVertexAttributeLocation = vertexAttributeLocation_null
+
+    def isDefined: Boolean = !vertexAttributeLocation_null_?(location)
 
     def get = location
 
@@ -25,8 +30,8 @@ trait RichVertexAttributeTrait {
       this
     }
 
-    @inline final def bindBuffer(buffer: GLBuffer): this.type={
-      self.bindBuffer(const.ARRAY_BUFFER, buffer)
+    @inline final def bindBuffer(target: Int, buffer: GLBuffer): this.type={
+      self.bindBuffer(target /*const.ARRAY_BUFFER*/, buffer)
       this
     }
 
@@ -34,7 +39,7 @@ trait RichVertexAttributeTrait {
   }
 
   class VertexAttribute(val name: String) extends VertexAttributeApiTrait {
-    var location: GLVertexAttributeLocation = vertexAttributeLocation_null
+    def cloneName: VertexAttribute = new VertexAttribute(name)
   }
 
   object VertexAttribute {

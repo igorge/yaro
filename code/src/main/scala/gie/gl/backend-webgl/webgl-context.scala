@@ -220,6 +220,11 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     real.getUniformLocation(program, name)
   }
 
+  @inline final def impl_glGetAttribLocation(program: GLProgram, name: String): Int={
+    real.getAttribLocation(program, name)
+  }
+
+
   @inline final def impl_glUniform1f(location: GLUniformLocation, x: Float): Unit={
     real.uniform1f(location, x)
   }

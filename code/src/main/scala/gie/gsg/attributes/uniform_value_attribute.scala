@@ -4,7 +4,7 @@ import gie.gsg.{RenderContext}
 
 
 trait UniformValueAttributeComponent {
-  this: RenderContext with StateAttributeComponent with GlProgramComponent with ShaderVariableComponent =>
+  this: RenderContext with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent =>
 
   trait UniformValueAttribute extends ShaderVariableAttribute {
     val uniformLocation: gl.UniformTrait

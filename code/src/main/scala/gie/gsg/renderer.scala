@@ -9,14 +9,20 @@ import scala.collection.mutable.ArrayBuffer
 
 
 trait RenderContext {
+  this: state_attribute.GlProgramAttributeComponent =>
+
   type GLT <: Context with ContextUnbind with RichContext
   val gl: GLT
+
+  protected var m_activeProgram: GlProgramHolder = null
+  @inline def program = m_activeProgram
+
 }
 
 class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GLType)
   extends RenderContext
   with state_attribute.StateAttributeComponent
-  with state_attribute.GlProgramComponent
+  with state_attribute.GlProgramAttributeComponent
   with state_attribute.Texture2DComponent
   with state_attribute.UniformValueAttributeComponent
   with state_attribute.ShaderVariableComponent
@@ -27,7 +33,8 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with TransformComponent
   with GeodeComponent
   with OwnerDrawComponent
-  with DrawableComponent
+  with DrawableComponent with GeometryComponent with DrawableVisitorComponent
+  with TrianglesArrayComponent
   with WithStateSetComponent
   with StateAttributeVisitorComponent
   with NodeVisitorComponent
@@ -59,6 +66,13 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     }
   }
 
+  private[gsg] def api_renderTrianglesArray(drawable: TrianglesArray, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit ={
+    val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
+    impl_applyStateSet(selfSS)
+    m_activeProgram.transformationMatrix = transformation
+    ???
+  }
+
   private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit= node match {
     case n: Transform =>
       val selfTransformation = impl_deduceTransformation(transformation, n.m)
@@ -69,7 +83,9 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.children.foreach( impl_renderNode(_, selfSS, transformation) )
 
-    case n: Geode => ???
+    case n: Geode =>
+      val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
+      n.drawables.foreach{ _.draw(selfSS, transformation) }
 
     case n: OwnerDraw=>
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
@@ -80,8 +96,6 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   }
 
   private var m_appliedStateSet = new StateSet()
-  private var m_activeProgram: GlProgramHolder = null
-  @inline def program = m_activeProgram
 
   private object applyVisitor extends StateAttributeVisitor {
     def visit(attr: GlProgramAttribute): Unit={

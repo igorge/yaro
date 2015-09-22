@@ -1,5 +1,7 @@
 package gie.gl
 
+import slogging.LoggerHolder
+
 
 trait ContextUnbind {
   gl: Context =>
@@ -56,10 +58,11 @@ trait RichContextCommon extends ContextUnbind {
 
 trait RichContext
   extends RichUniformTrait
-  with    RichVertexAttributeTrait
+  with    RichVertexAttributeComponent
   with    RichProgramTrait
   with    RichShaderTrait
-  with    RichContextCommon {
+  with    RichContextCommon
+  with    LoggerHolder {
   this: Context =>
 
   object uniform {

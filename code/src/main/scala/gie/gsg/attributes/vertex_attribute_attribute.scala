@@ -4,18 +4,18 @@ import gie.gl.RichContext
 import gie.gsg.RenderContext
 
 trait VertexAttributeAttributeComponent {
-  this: RenderContext with StateAttributeComponent with GlProgramComponent with ShaderVariableComponent  =>
+  this: RenderContext with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent  =>
 
-  class VertexAttributeAttribute(val vertexAttr:gl.VertexAttribute, bufferFun: ()=>gl.GLBuffer, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
+  class VertexAttributeAttribute(val vertexAttr: gl.VertexAttribute, bufferFun: ()=>gl.GLBuffer, val bufferTarget: Int, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
     lazy val buffer = bufferFun()
     def name = vertexAttr.name
 
     def apply(from: ShaderVariableAttribute): Unit={
       if(from eq null) {
-        vertexAttr.bindBuffer(buffer).vertexAttribPointer(componentSize, componentType, true, stride, offset).enable()
+        vertexAttr.bindBuffer(bufferTarget, buffer).vertexAttribPointer(componentSize, componentType, true, stride, offset).enable()
       } else {
         val fromT = from.asInstanceOf[VertexAttributeAttribute]
-        if(buffer != fromT.buffer) vertexAttr.bindBuffer(buffer)
+        if(buffer != fromT.buffer || bufferTarget!=fromT.bufferTarget) vertexAttr.bindBuffer(bufferTarget, buffer)
         vertexAttr.vertexAttribPointer(componentSize, componentType, true, stride, offset).enable()
       }
     }
@@ -36,6 +36,7 @@ trait VertexAttributeAttributeComponent {
 
         (vertexAttr eq yTyped.vertexAttr) &&
           (buffer == yTyped.buffer) &&
+          (bufferTarget == yTyped.bufferTarget)
           (componentSize == yTyped.componentSize) &&
           (componentType == yTyped.componentType) &&
           (stride == yTyped.stride) &&
@@ -43,7 +44,7 @@ trait VertexAttributeAttributeComponent {
       }
     }
 
-    override def toString = s"VertexAttributeAttribute(name=${name}, componentSize=${componentSize}, componentType=${componentType}, stride=${stride}, offset=${offset})"
+    override def toString = s"VertexAttributeAttribute(name=${name}, bufferTarget=${bufferTarget}, componentSize=${componentSize}, componentType=${componentType}, stride=${stride}, offset=${offset})"
 
   }
 }

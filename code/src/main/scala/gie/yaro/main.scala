@@ -130,7 +130,7 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.SML_Matrix4FRich {
+      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.SML_Matrix4FRich with LazyLogging {
         //@inline override def checkGlError(): Unit = { /*noop*/ }
       }
 
@@ -164,6 +164,15 @@ object app extends JSApp with LazyLogging {
         val p = renderer.gl.Program()
 
         val mapToLocations = renderer.gl.nameToLocationsMaps()
+
+        def resolveAttribute(attribute: renderer.gl.VertexAttributeApiTrait): attribute.type = {
+          if( attribute.isDefined ) throw new Exception(s"vertex attribute '${attribute.name}' is already defined")
+
+          mapToLocations.attributes.getOrElse(attribute.name, throw new Exception(s"attribute '${attribute.name}' not found"))
+
+          attribute
+        }
+
 
         private val u_mv = renderer.gl.Uniform("u_mv", mapToLocations.uniforms)
         private val u_projection = renderer.gl.Uniform("u_projection", mapToLocations.uniforms)
@@ -263,13 +272,13 @@ object app extends JSApp with LazyLogging {
           .addAttribute( attr_program )
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
-          .addVertexAttributeValue( programHolder.a_position, 3, gl.const.FLOAT){squareBuffer}
-          .addVertexAttributeValue( programHolder.a_color,3, gl.const.FLOAT){squareColors}
-          .addVertexAttributeValue( programHolder.a_tex_coordinate,2, gl.const.FLOAT ){squareTexCoord}
+          .addVertexAttributeValue( programHolder.a_position, gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){squareBuffer}
+          .addVertexAttributeValue( programHolder.a_color,gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){squareColors}
+          .addVertexAttributeValue( programHolder.a_tex_coordinate,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){squareTexCoord}
 
         rootGroup.children += node
 
-        def tick(oldTime: Long)(t:Double): Unit ={
+        def tick(oldTime: Long)(t:Double): Unit =try {
 
           val currentTimeNano = System.nanoTime()
 
@@ -280,11 +289,17 @@ object app extends JSApp with LazyLogging {
           gl.clear(gl.const.COLOR_BUFFER_BIT | gl.const.DEPTH_BUFFER_BIT)
           renderer.render(rootGroup)
 
+        } catch {
+          case e:Exception=>
+            logger.debug(s">>> ${e}")
         }
 
         tick(System.nanoTime())(0)
 
-      }.onComplete( _.get )})
+      }.onComplete{r=>
+        logger.debug(s">> ${r}")
+        r.get
+      }})
 
 
 

@@ -101,6 +101,7 @@ trait Context {
   def impl_glEnableVertexAttribArray(index: Int): Unit
   def impl_glDisableVertexAttribArray(index: Int): Unit
   def impl_glGetUniformLocation(program: GLProgram, name: String): GLUniformLocation
+  def impl_glGetAttribLocation(program: GLProgram, name: String): Int
   def impl_glUniform1f(location: GLUniformLocation, x: Float): Unit
   def impl_glUniform4fv(location: GLUniformLocation, v: Array[Float]): Unit
   def impl_glUniform1i(location: GLUniformLocation, v: Int): Unit
@@ -291,6 +292,13 @@ trait Context {
     checkGlError()
     r
   }
+
+  @inline final def getAttribLocation(program: GLProgram, name: String): Int={
+    val r = impl_glGetAttribLocation(program, name)
+    checkGlError()
+    r
+  }
+  
 
   @inline final def uniform1f(location: GLUniformLocation, x: Float): Unit={
     impl_glUniform1f(location, x)

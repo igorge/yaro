@@ -2,7 +2,7 @@ package gie.gl
 
 
 trait RichProgramTrait {
-  this: Context with RichUniformTrait with RichVertexAttributeTrait =>
+  this: Context with RichUniformTrait with RichVertexAttributeComponent =>
 
   trait NameToLocationReadMaps {
     val uniforms: UniformMapType
