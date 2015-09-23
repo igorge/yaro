@@ -6,9 +6,9 @@ import scala.collection.mutable.ArrayBuffer
 trait GeodeComponent {
   this: NodeComponent with WithStateSetComponent with DrawableComponent with NodeVisitorComponent =>
 
-  class Geode extends Node with WithStateSetImpl {
+  class Geode(initDrawables: Drawable*) extends Node with WithStateSetImpl {
 
-    val drawables = new ArrayBuffer[Drawable]()
+    val drawables = ArrayBuffer[Drawable](initDrawables :_*)
 
     def addDrawable(drawable: Drawable): this.type={
       drawables += drawable

@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 
 trait RenderContext {
-  this: state_attribute.GlProgramAttributeComponent =>
+  this: ProgramHolderComponent  =>
 
   type GLT <: Context with ContextUnbind with RichContext
   val gl: GLT
@@ -27,6 +27,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with state_attribute.UniformValueAttributeComponent
   with state_attribute.ShaderVariableComponent
   with state_attribute.VertexAttributeAttributeComponent
+  with ProgramHolderComponent
   with StateSetComponent
   with NodeComponent
   with GroupComponent
@@ -67,10 +68,14 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   }
 
   private[gsg] def api_renderTrianglesArray(drawable: TrianglesArray, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit ={
+  //  logger.debug(s"api_renderTrianglesArray(..., ${parentMergedStateSet}, ...)")
     val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
     impl_applyStateSet(selfSS)
     m_activeProgram.transformationMatrix = transformation
-    ???
+
+    gl.drawArrays(gl.const.TRIANGLES, 0, drawable.verticesCount)
+
+//    logger.debug(s"api_renderTrianglesArray(...) exit")
   }
 
   private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit= node match {
@@ -84,6 +89,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
       n.children.foreach( impl_renderNode(_, selfSS, transformation) )
 
     case n: Geode =>
+      n.drawables.foreach{ _.prepareDraw() }
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.drawables.foreach{ _.draw(selfSS, transformation) }
 
@@ -122,6 +128,8 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
 
   private def impl_applyStateSet(ss: StateSet): Unit={
+
+    assume(ss ne null, "Non null state set is required.")
 
     val newApplied = new StateSet()
 

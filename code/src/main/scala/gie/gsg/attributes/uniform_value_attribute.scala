@@ -1,10 +1,10 @@
 package gie.gsg.state_attribute
 
-import gie.gsg.{RenderContext}
+import gie.gsg.{ProgramHolderComponent, RenderContext}
 
 
 trait UniformValueAttributeComponent {
-  this: RenderContext with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent =>
+  this: RenderContext with ProgramHolderComponent with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent =>
 
   trait UniformValueAttribute extends ShaderVariableAttribute {
     val uniformLocation: gl.UniformTrait

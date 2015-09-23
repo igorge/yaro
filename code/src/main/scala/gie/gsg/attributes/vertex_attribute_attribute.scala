@@ -1,14 +1,19 @@
 package gie.gsg.state_attribute
 
 import gie.gl.RichContext
-import gie.gsg.RenderContext
+import gie.gsg.{ProgramHolderComponent, RenderContext}
 
 trait VertexAttributeAttributeComponent {
-  this: RenderContext with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent  =>
+  this: RenderContext with ProgramHolderComponent with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent  =>
 
-  class VertexAttributeAttribute(val vertexAttr: gl.VertexAttribute, bufferFun: ()=>gl.GLBuffer, val bufferTarget: Int, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
+  class VertexAttributeAttribute(vertexAttName: String, bufferFun: ()=>gl.GLBuffer, val bufferTarget: Int, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
     lazy val buffer = bufferFun()
-    def name = vertexAttr.name
+    lazy val vertexAttr = {
+      val r = new gl.VertexAttribute(vertexAttName)
+      m_activeProgram.resolveAttribute(r)
+      r
+    }
+    def name = vertexAttName
 
     def apply(from: ShaderVariableAttribute): Unit={
       if(from eq null) {

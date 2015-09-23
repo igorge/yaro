@@ -150,6 +150,12 @@ object app extends JSApp with LazyLogging {
 
       val renderer = new gsg.Renderer(gl)
 
+      object attributesNames {
+        val a_position = "a_position"
+        val a_color = "a_color"
+        val a_tex_coordinate = "a_tex_coordinate"
+      }
+
       class Holder1 extends renderer.GlProgramHolder {
 
         def transformationMatrix_=(m:MatrixRead4F): m.type = {
@@ -168,7 +174,7 @@ object app extends JSApp with LazyLogging {
         def resolveAttribute(attribute: renderer.gl.VertexAttributeApiTrait): attribute.type = {
           if( attribute.isDefined ) throw new Exception(s"vertex attribute '${attribute.name}' is already defined")
 
-          mapToLocations.attributes.getOrElse(attribute.name, throw new Exception(s"attribute '${attribute.name}' not found"))
+          attribute.location = mapToLocations.attributes.getOrElse(attribute.name, throw new Exception(s"attribute '${attribute.name}' not found")).location
 
           attribute
         }
@@ -178,9 +184,14 @@ object app extends JSApp with LazyLogging {
         private val u_projection = renderer.gl.Uniform("u_projection", mapToLocations.uniforms)
         val u_texture = renderer.gl.Uniform("u_texture", mapToLocations.uniforms)
 
-        val a_position = renderer.gl.VertexAttribute("a_position", mapToLocations.attributes)
-        val a_color = renderer.gl.VertexAttribute("a_color", mapToLocations.attributes)
-        val a_tex_coordinate = renderer.gl.VertexAttribute("a_tex_coordinate", mapToLocations.attributes)
+        val a_position = renderer.gl.VertexAttribute(attributesNames.a_position, mapToLocations.attributes)
+        val a_color = renderer.gl.VertexAttribute(attributesNames.a_color, mapToLocations.attributes)
+        val a_tex_coordinate = renderer.gl.VertexAttribute(attributesNames.a_tex_coordinate, mapToLocations.attributes)
+
+        def vertexCoordinatesAttribute = a_position
+        def vertexTextureCoordinatesAttribute = a_tex_coordinate
+        def vertexColorAttribute =  a_color
+
 
         val vertexShader = renderer.gl.shaderOps(gl.createVertexShader())
           .source(shaderSource.vertexShader)
@@ -268,15 +279,22 @@ object app extends JSApp with LazyLogging {
           gl.drawArrays(gl.const.TRIANGLES, 0, 6)
         })
 
-        node
-          .addAttribute( attr_program )
+        val squareNode= new renderer.TrianglesArray(geom._1, Some(geom._2))
+        squareNode
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
-          .addVertexAttributeValue( programHolder.a_position, gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){squareBuffer}
-          .addVertexAttributeValue( programHolder.a_color,gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){squareColors}
-          .addVertexAttributeValue( programHolder.a_tex_coordinate,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){squareTexCoord}
 
-        rootGroup.children += node
+
+        node
+          .addAttribute(new renderer.Texture2D(tex1,0))
+          .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+          .addVertexAttributeValue( attributesNames.a_position, gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){squareBuffer}
+          .addVertexAttributeValue( attributesNames.a_color,gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){squareColors}
+          .addVertexAttributeValue( attributesNames.a_tex_coordinate,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){squareTexCoord}
+
+        //rootGroup.children += node
+        rootGroup.children += new renderer.Geode(squareNode)
+        rootGroup.addAttribute( attr_program )
 
         def tick(oldTime: Long)(t:Double): Unit =try {
 
@@ -291,7 +309,8 @@ object app extends JSApp with LazyLogging {
 
         } catch {
           case e:Exception=>
-            logger.debug(s">>> ${e}")
+            logger.debug(s">>> ${e} >>>")
+            e.printStackTrace()
         }
 
         tick(System.nanoTime())(0)

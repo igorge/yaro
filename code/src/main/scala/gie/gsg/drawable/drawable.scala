@@ -10,6 +10,7 @@ trait DrawableComponent {
     //def shape: Shape = ???
 
     //def accept(visitor: DrawableVisitor): Unit
+    private [gsg] def prepareDraw(): Unit
     private [gsg] def draw(parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit
   }
 

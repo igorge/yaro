@@ -78,7 +78,6 @@ trait StateSetComponent {
     }
 
     def mergeCopyWithParent(ss: StateSet): StateSet = { //this overrides ss
-
       val newSS = new StateSet()
 
       impl_mergeCopyWithParent_attributes(newSS, ss)
@@ -93,11 +92,11 @@ trait StateSetComponent {
         if(parentSS.m_variables eq null){
           //do nothing
         } else {
-          newSS.m_variables ++= parentSS.m_variables
+          newSS.variables_! ++= parentSS.m_variables
         }
       } else {
         if(parentSS.m_variables eq null) {
-          newSS.m_variables ++= m_variables
+          newSS.variables_! ++= m_variables
         } else {
           gie.sorted_merge.merge(this.m_variables, parentSS.m_variables, newSS.m_variables){ ShaderVariableAttribute.orderingCmp }{ (l,r)=>l }
         }
