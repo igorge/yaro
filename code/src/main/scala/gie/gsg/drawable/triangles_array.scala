@@ -9,7 +9,7 @@ trait TrianglesArrayComponent {
 
   class TrianglesArray(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends Geometry with WithStateSetImpl {
 
-    private var init: ()=>Unit = doInit _
+    private var init: StateSet=>Unit = doInit _
 
     val verticesCount = vertexData.size/3
 
@@ -31,29 +31,34 @@ trait TrianglesArrayComponent {
       gl.createBuffer(gl.const.ARRAY_BUFFER, cd, gl.const.STATIC_DRAW)
     }
 
-    private def doInit(): Unit ={
-      logger.debug("doInit()")
-      this.addVertexAttributeValue("a_position", gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){m_vertexData}
+    private def doInit(parentMergedStateSet: StateSet): Unit ={
+      logger.debug("TrianglesArray.doInit()")
+
+      val program = StateSet.getProgram(this.stateSet, parentMergedStateSet)
+      if (program eq null) throw new Exception("No program specified for drawable")
+
+      this.addVertexAttributeValue(program.vertexCoordinatesAttribute.name, gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){m_vertexData}
+
       m_texCoordData.foreach{ tx=>
-        this.addVertexAttributeValue("a_tex_coordinate" ,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){tx}
+        this.addVertexAttributeValue(program.vertexTextureCoordinatesAttribute.name ,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){tx}
       }
 
       m_vertexColorData.foreach{ color=>
-        this.addVertexAttributeValue( "a_color", gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){color}
+        this.addVertexAttributeValue(program.vertexColorAttribute.name, gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){color}
       }
 
-      init = ()=>{}
+      init = (_)=>{}
       logger.debug("TrianglesArray.doInit() exit")
     }
 
     private [gsg] def draw(parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       //logger.debug("TrianglesArray.draw(...)")
+      init(parentMergedStateSet)
       api_renderTrianglesArray(this, parentMergedStateSet, transformation)
       //logger.debug("TrianglesArray.draw(...) exit")
     }
 
     private [gsg] def prepareDraw(): Unit={
-      init()
     }
 
 

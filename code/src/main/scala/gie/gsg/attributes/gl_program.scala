@@ -15,7 +15,7 @@ trait GlProgramAttributeComponent {
 
     private[gsg] def m_program = programHolder.program
 
-    final val index = 0
+    final val index = GlProgramAttribute.index
 
     def ===(y: StateAttribute): Boolean = if (index != y.index) false else { m_program == y.asInstanceOf[GlProgramAttribute].m_program }
 
@@ -25,6 +25,10 @@ trait GlProgramAttributeComponent {
       programHolder.applied()
     }
 
+  }
+
+  object GlProgramAttribute {
+    val index = 0
   }
 
 }

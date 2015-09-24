@@ -1,6 +1,6 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.{ShaderVariableComponent, UniformValueAttributeComponent, StateAttributeComponent}
+import gie.gsg.state_attribute.{GlProgramAttributeComponent, ShaderVariableComponent, UniformValueAttributeComponent, StateAttributeComponent}
 import gie.search.binarySearch
 
 import scala.collection.Searching.{SearchResult, Found, InsertionPoint}
@@ -9,7 +9,18 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 
 trait StateSetComponent {
-  this: ShaderVariableComponent with StateAttributeComponent with UniformValueAttributeComponent =>
+  this: ShaderVariableComponent with StateAttributeComponent with UniformValueAttributeComponent with GlProgramAttributeComponent with ProgramHolderComponent =>
+
+  object StateSet {
+    @inline
+    def getProgram(xSS: StateSet, ySS: StateSet): GlProgramHolder={
+      if(xSS eq null) {
+        if(ySS eq null) null else ySS.getProgram()
+      } else {
+        xSS.getProgram(ySS)
+      }
+    }
+  }
 
   // Growable += simply appends at the end of array buffer with ordering enforcement
   // use insert() for set-like element insertion
@@ -29,6 +40,20 @@ trait StateSetComponent {
     private [gsg] def variables = m_variables
 
 
+    @inline
+    def getProgram(): GlProgramHolder ={
+      if(m_attributes.size==0 || m_attributes(0).index!=GlProgramAttribute.index ) null else {
+        m_attributes(0).asInstanceOf[GlProgramAttribute].programHolder
+      }
+    }
+
+    @inline
+    def getProgram(otherSS: StateSet): GlProgramHolder={
+      val x = this.getProgram()
+      if(x ne null) x else {
+        if (otherSS eq null) null else otherSS.getProgram()
+      }
+    }
 
     def clear(){
       m_attributes.clear()
