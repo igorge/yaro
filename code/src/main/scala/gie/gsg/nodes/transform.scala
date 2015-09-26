@@ -3,15 +3,15 @@ package gie.gsg
 import gie.sml.MatrixRead4F
 
 trait TransformComponent {
-  this: NodeComponent with GroupComponent with NodeVisitorComponent =>
+  this: NodeComponent with GroupComponent with NodeVisitorComponent with StateSetComponent =>
 
   abstract class Transform extends Group {
 
     def m: MatrixRead4F
 
-//    override def accept(visitor: NodeVisitor): Unit = {
-//      visitor.visit(this)
-//    }
+    override def accept(visitor: NodeVisitor, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit = {
+      visitor.visit(this, parentMergedStateSet, transformation)
+    }
   }
 
   class TransformMatrix(private var m_m: MatrixRead4F){

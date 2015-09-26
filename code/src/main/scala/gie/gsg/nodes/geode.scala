@@ -1,10 +1,12 @@
 package gie.gsg
 
+import gie.sml.MatrixRead4F
+
 import scala.collection.mutable.ArrayBuffer
 
 
 trait GeodeComponent {
-  this: NodeComponent with WithStateSetComponent with DrawableComponent with NodeVisitorComponent =>
+  this: NodeComponent with WithStateSetComponent with DrawableComponent with NodeVisitorComponent with StateSetComponent =>
 
   class Geode(initDrawables: Drawable*) extends Node with WithStateSetImpl {
 
@@ -15,9 +17,9 @@ trait GeodeComponent {
       this
     }
 
-//    def accept(visitor: NodeVisitor): Unit = {
-//      visitor.visit(this)
-//    }
+    def accept(visitor: NodeVisitor, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit = {
+      visitor.visit(this, parentMergedStateSet, transformation)
+    }
 
   }
 

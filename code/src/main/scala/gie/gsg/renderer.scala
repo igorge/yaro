@@ -27,6 +27,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with state_attribute.UniformValueAttributeComponent
   with state_attribute.ShaderVariableComponent
   with state_attribute.VertexAttributeAttributeComponent
+  with state_attribute.IndexBufferAttributeComponent
   with ProgramHolderComponent
   with StateSetComponent
   with NodeComponent
@@ -78,27 +79,36 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 //    logger.debug(s"api_renderTrianglesArray(...) exit")
   }
 
-  private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit= node match {
-    case n: Transform =>
+  private object impl_renderNodeVisitor extends NodeVisitor {
+
+    def visit(n: Transform, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       val selfTransformation = impl_deduceTransformation(transformation, n.m)
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.children.foreach( impl_renderNode(_, selfSS, selfTransformation) )
+    }
 
-    case n: Group =>
+    def visit(n: Group, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.children.foreach( impl_renderNode(_, selfSS, transformation) )
+    }
 
-    case n: Geode =>
+    def visit(n: Geode, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       n.drawables.foreach{ _.prepareDraw() }
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.drawables.foreach{ _.draw(selfSS, transformation) }
+    }
 
-    case n: OwnerDraw=>
+    def visit(n: OwnerDraw, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       impl_applyStateSet(selfSS)
       m_activeProgram.transformationMatrix = transformation
       n.f(n)
+    }
+  }
 
+  @inline
+  private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
+    node.accept(impl_renderNodeVisitor, parentMergedStateSet, transformation)
   }
 
   private var m_appliedStateSet = new StateSet()
@@ -113,6 +123,9 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
       gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)
       gl.bindTexture(gl.const.TEXTURE_2D, attr.m_texture)
     }
+    def visit(attr: IndexBufferAttribute): Unit={
+      gl.bindBuffer(gl.const.ELEMENT_ARRAY_BUFFER, attr.buffer)
+    }
   }
 
   private object unapplyVisitor extends StateAttributeVisitor {
@@ -123,6 +136,10 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     def visit(attr: Texture2D): Unit ={
       gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)
       gl.bindNullTexture(gl.const.TEXTURE_2D)
+      gl.activateTexture(gl.const.TEXTURE0)
+    }
+    def visit(attr: IndexBufferAttribute): Unit={
+      gl.bindNullBuffer(gl.const.ELEMENT_ARRAY_BUFFER)
     }
   }
 

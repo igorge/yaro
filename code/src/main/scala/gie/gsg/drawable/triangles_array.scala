@@ -37,14 +37,14 @@ trait TrianglesArrayComponent {
       val program = StateSet.getProgram(this.stateSet, parentMergedStateSet)
       if (program eq null) throw new Exception("No program specified for drawable")
 
-      this.addVertexAttributeValue(program.vertexCoordinatesAttribute.name, gl.const.ARRAY_BUFFER, 3, gl.const.FLOAT){m_vertexData}
+      this.addVertexAttributeValue(program.vertexCoordinatesAttribute.name, 3, gl.const.FLOAT){m_vertexData}
 
       m_texCoordData.foreach{ tx=>
-        this.addVertexAttributeValue(program.vertexTextureCoordinatesAttribute.name ,gl.const.ARRAY_BUFFER, 2, gl.const.FLOAT ){tx}
+        this.addVertexAttributeValue(program.vertexTextureCoordinatesAttribute.name, 2, gl.const.FLOAT ){tx}
       }
 
       m_vertexColorData.foreach{ color=>
-        this.addVertexAttributeValue(program.vertexColorAttribute.name, gl.const.ARRAY_BUFFER,3, gl.const.FLOAT){color}
+        this.addVertexAttributeValue(program.vertexColorAttribute.name, 3, gl.const.FLOAT){color}
       }
 
       init = (_)=>{}

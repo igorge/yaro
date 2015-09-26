@@ -19,6 +19,6 @@ trait StateAttributeComponent {
 
 
 object StateAttribute {
-  val attributesCount = 2
+  val attributesCount = 3
 }
 

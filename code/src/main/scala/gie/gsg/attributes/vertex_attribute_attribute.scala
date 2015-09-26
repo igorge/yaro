@@ -6,8 +6,10 @@ import gie.gsg.{ProgramHolderComponent, RenderContext}
 trait VertexAttributeAttributeComponent {
   this: RenderContext with ProgramHolderComponent with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent  =>
 
-  class VertexAttributeAttribute(vertexAttName: String, bufferFun: ()=>gl.GLBuffer, val bufferTarget: Int, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
-    lazy val buffer = bufferFun()
+  class VertexAttributeAttribute(vertexAttName: String, val buffer: gl.GLBuffer, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
+
+    val bufferTarget: Int = gl.const.ARRAY_BUFFER
+
     lazy val vertexAttr = {
       val r = new gl.VertexAttribute(vertexAttName)
       m_activeProgram.resolveAttribute(r)

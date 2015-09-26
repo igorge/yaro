@@ -20,8 +20,8 @@ trait WithStateSetComponent {
       stateSet_!.addVariableValue(attr)
       this
     }
-    def addVertexAttributeValue(vertexAttr: String, bufferTarget: Int, componentSize: Int, componentType: Int, stride: Int = 0, offset: Int = 0)(lazyBuffer: => gl.GLBuffer): this.type={
-      addVertexAttributeValue( new VertexAttributeAttribute(vertexAttr, ()=>lazyBuffer, bufferTarget, componentSize, componentType, stride, offset) )
+    def addVertexAttributeValue(vertexAttr: String, componentSize: Int, componentType: Int, stride: Int = 0, offset: Int = 0)(buffer: => gl.GLBuffer): this.type={
+      addVertexAttributeValue( new VertexAttributeAttribute(vertexAttr, buffer, componentSize, componentType, stride, offset) )
     }
   }
 
