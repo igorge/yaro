@@ -32,7 +32,9 @@ libraryDependencies += "org.scodec" %%% "scodec-core" % "1.8.1"
 
 //libraryDependencies += "org.scala-js" %%% "scala-parser-combinators" % "1.0.2"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.5"
+//libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.5"
+
+libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.9.6-SNAPSHOT"
 
 jsDependencies += ProvidedJS / "rAF.js"
 
