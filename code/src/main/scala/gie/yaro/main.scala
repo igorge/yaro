@@ -134,7 +134,7 @@ object app extends JSApp with LazyLogging {
         //@inline override def checkGlError(): Unit = { /*noop*/ }
       }
 
-      val geom = gie.geom.square(1,1,1)
+      val geom = gie.geom.square.gen(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
       val squareTexCoord = gl.createBuffer(
         target = gl.const.ARRAY_BUFFER,
