@@ -7,15 +7,13 @@ import slogging.LoggerHolder
 trait TrianglesArrayComponent {
   this: RenderContext with ProgramHolderComponent with state_attribute.GlProgramAttributeComponent with VertexAttributeAttributeComponent with DrawableComponent with GeometryComponent with DrawableVisitorComponent with StateSetComponent with WithStateSetComponent with LoggerHolder=>
 
-  class TrianglesArray(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends Geometry with WithStateSetImpl {
-
-    private var init: StateSet=>Unit = doInit _
-
-    val verticesCount = vertexData.size/3
+  abstract class TrianglesArrayAbstract(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends Geometry with WithStateSetImpl {
+    protected var init: StateSet=>Unit = doInit _
+    protected def doInit(parentMergedStateSet: StateSet): Unit
+    val verticesCount:Int
 
     val m_vertexData = {
-      val componentsPerUnit = 3
-      assume(vertexData.size%componentsPerUnit == 0)
+      assume(vertexData.size % 3 == 0)
       gl.createBuffer(gl.const.ARRAY_BUFFER, vertexData, gl.const.STATIC_DRAW)
     }
 
@@ -31,7 +29,13 @@ trait TrianglesArrayComponent {
       gl.createBuffer(gl.const.ARRAY_BUFFER, cd, gl.const.STATIC_DRAW)
     }
 
-    private def doInit(parentMergedStateSet: StateSet): Unit ={
+  }
+
+  class TrianglesArray(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
+
+    val verticesCount = vertexData.size/3
+
+    def doInit(parentMergedStateSet: StateSet): Unit ={
       logger.debug("TrianglesArray.doInit()")
 
       val program = StateSet.getProgram(this.stateSet, parentMergedStateSet)
@@ -58,10 +62,54 @@ trait TrianglesArrayComponent {
       //logger.debug("TrianglesArray.draw(...) exit")
     }
 
-    private [gsg] def prepareDraw(): Unit={
+
+
+  }
+
+  class TrianglesIndexedArray(elementsData: Array[Float], vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
+
+    val verticesCount = elementsData.size / 3
+
+    val m_elementsData = {
+      assume(elementsData.size % 3 == 0)
+      gl.createBuffer(gl.const.ELEMENT_ARRAY_BUFFER, elementsData, gl.const.STATIC_DRAW)
+    }
+
+    def doInit(parentMergedStateSet: StateSet): Unit = {
+      logger.debug("TrianglesArray.doInit()")
+
+      val program = StateSet.getProgram(this.stateSet, parentMergedStateSet)
+      if (program eq null) throw new Exception("No program specified for drawable")
+
+      this.addVertexAttributeValue(program.vertexCoordinatesAttribute.name, 3, gl.const.FLOAT) {
+        m_vertexData
+      }
+
+      m_texCoordData.foreach { tx =>
+        this.addVertexAttributeValue(program.vertexTextureCoordinatesAttribute.name, 2, gl.const.FLOAT) {
+          tx
+        }
+      }
+
+      m_vertexColorData.foreach { color =>
+        this.addVertexAttributeValue(program.vertexColorAttribute.name, 3, gl.const.FLOAT) {
+          color
+        }
+      }
+
+      init = (_) => {}
+      logger.debug("TrianglesArray.doInit() exit")
+    }
+
+    private[gsg] def draw(parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit = {
+      //logger.debug("TrianglesArray.draw(...)")
+      init(parentMergedStateSet)
+      //      api_renderTrianglesArray(this, parentMergedStateSet, transformation)
+      //logger.debug("TrianglesArray.draw(...) exit")
     }
 
 
   }
 
-}
+
+  }

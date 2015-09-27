@@ -93,7 +93,6 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     }
 
     def visit(n: Geode, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
-      n.drawables.foreach{ _.prepareDraw() }
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       n.drawables.foreach{ _.draw(selfSS, transformation) }
     }
