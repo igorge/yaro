@@ -1,6 +1,7 @@
 package gie.yaro
 
 
+import gie.geom.square
 import org.scalajs.dom.raw.WebGLProgram
 import slogging._
 
@@ -144,7 +145,7 @@ object app extends JSApp with LazyLogging {
       val squareColors = gl.createBuffer(
         target = gl.const.ARRAY_BUFFER,
         usage = gl.const.STATIC_DRAW,
-        data = js.Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
+        data = Array[Float](1f,0f,0f, 1f,0f,0f, 1f,0f,0f, 0f,1f,0f, 0f,1f,0f, 0f,1f,0f)
       )
 
 
@@ -276,8 +277,12 @@ object app extends JSApp with LazyLogging {
         }
 
         val node = new renderer.OwnerDraw(self=>{
-          gl.drawArrays(gl.const.TRIANGLES, 0, 6)
+          //gl.drawArrays(gl.const.TRIANGLES, 0, 6)
+          gl.drawElements(gl.const.TRIANGLES, 6, gl.const.UNSIGNED_SHORT, 0)
         })
+
+        val indexedBox = square.genIndex(1,1,1)
+
 
         val squareNode= new renderer.TrianglesArray(geom._1, Some(geom._2))
         squareNode
@@ -285,15 +290,20 @@ object app extends JSApp with LazyLogging {
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
 
 
-        node
-          .addAttribute(new renderer.Texture2D(tex1,0))
-          .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
-          .addVertexAttributeValue( attributesNames.a_position, 3, gl.const.FLOAT){squareBuffer}
-          .addVertexAttributeValue( attributesNames.a_color, 3, gl.const.FLOAT){squareColors}
-          .addVertexAttributeValue( attributesNames.a_tex_coordinate,  2, gl.const.FLOAT ){squareTexCoord}
+                node
+                  .addAttribute(new renderer.Texture2D(tex1,0))
+                  .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+                  .addAttribute( new renderer.IndexBufferAttribute(gl.createBuffer(gl.const.ELEMENT_ARRAY_BUFFER, gl.AsUnsignedShort(indexedBox._1), gl.const.STATIC_DRAW)))
+                  .addVertexAttributeValue( attributesNames.a_position, 3, gl.const.FLOAT){ gl.createBuffer(gl.const.ARRAY_BUFFER, indexedBox._2, gl.const.STATIC_DRAW) }
+                  .addVertexAttributeValue( attributesNames.a_tex_coordinate,  2, gl.const.FLOAT ){gl.createBuffer(gl.const.ARRAY_BUFFER, indexedBox._3, gl.const.STATIC_DRAW)}
+//                node
+//                  .addAttribute(new renderer.Texture2D(tex1,0))
+//                  .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+//                  .addVertexAttributeValue( attributesNames.a_position, 3, gl.const.FLOAT){ squareBuffer}
+//                  .addVertexAttributeValue( attributesNames.a_tex_coordinate,  2, gl.const.FLOAT ){squareTexCoord}
 
         //rootGroup.children += node
-        rootGroup.children += new renderer.Geode(squareNode)
+        rootGroup.children += node //new renderer.Geode(squareNode)
         rootGroup.addAttribute( attr_program )
 
         def tick(oldTime: Long)(t:Double): Unit =try {

@@ -39,6 +39,7 @@ object WebGLContext extends Constants {
   final val RGBA: Int = dom.raw.WebGLRenderingContext.RGBA
   final val BYTE: Int = dom.raw.WebGLRenderingContext.BYTE
   final val UNSIGNED_BYTE: Int = dom.raw.WebGLRenderingContext.UNSIGNED_BYTE
+  final val UNSIGNED_SHORT: Int = dom.raw.WebGLRenderingContext.UNSIGNED_SHORT
   final val TEXTURE_MAG_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MAG_FILTER
   final val TEXTURE_MIN_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MIN_FILTER
   final val NEAREST: Int = dom.raw.WebGLRenderingContext.NEAREST
@@ -78,11 +79,9 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
 
   final val const = WebGLContext
 
-  @inline def checkGlError(): Unit = {
-    val code = real.getError()
-    if ( code != const.NO_ERROR ) throw new GlGetErrorException(code)
+  @inline final def impl_glGetError(): Int={
+    real.getError()
   }
-
 
   @inline final def currentProgram(): GLProgram = real.getParameter(const.CURRENT_PROGRAM).asInstanceOf[GLProgram]
 
@@ -184,15 +183,62 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   }
 
 
-  @inline final def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit={
+  @inline final def impl_glBufferDataFloat(target: Int, data: Array[Float], usage: Int): Unit={
     real.bufferData(target, data.toTypedArray, usage)  // XXX: slow?
   }
 
-
-  @inline final def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit={
+  @inline final def impl_glBufferDataFloat(target: Int, data: Seq[Float], usage: Int): Unit={
 
     val len = data.size
     val dest = new Float32Array(len)
+
+    var i = 0
+    while (i < len) {
+      dest(i) = data(i)
+      i += 1
+    }
+
+    real.bufferData(target, dest, usage)  // XXX: slow?
+  }
+
+
+  @inline final def impl_glBufferDataInt(target: Int, data: Array[Int], usage: Int): Unit={
+    real.bufferData(target, data.toTypedArray, usage)  // XXX: slow?
+  }
+
+  @inline final def impl_glBufferDataInt(target: Int, data: Seq[Int], usage: Int): Unit={
+
+    val len = data.size
+    val dest = new Int32Array(len)
+
+    var i = 0
+    while (i < len) {
+      dest(i) = data(i)
+      i += 1
+    }
+
+    real.bufferData(target, dest, usage)  // XXX: slow?
+  }
+
+
+  def impl_glBufferDataUnsignedShort(target: Int, data: Array[Int], usage: Int): Unit={
+
+    val len = data.size
+    val dest = new Uint16Array(len)
+
+    var i = 0
+    while (i < len) {
+      dest(i) = data(i)
+      i += 1
+    }
+
+    real.bufferData(target, dest, usage)  // XXX: slow?
+  }
+
+  def impl_glBufferDataUnsignedShort(target: Int, data: Seq[Int], usage: Int): Unit={
+
+    val len = data.size
+    val dest = new Uint16Array(len)
 
     var i = 0
     while (i < len) {
@@ -247,8 +293,12 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
     ))
   }
 
-  @inline final def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit = {
+  @inline final def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit ={
     real.drawArrays(mode, first, count)
+  }
+
+  @inline final def impl_glDrawElements(mode: Int, count: Int, `type`: Int, offset: Int): Unit ={
+    real.drawElements(mode, count, `type`, offset)
   }
 
   @inline final def impl_glGenTexture(): GLTexture={

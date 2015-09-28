@@ -33,6 +33,7 @@ trait Constants {
   val RGBA: Int
   val BYTE: Int
   val UNSIGNED_BYTE: Int
+  val UNSIGNED_SHORT: Int
   val TEXTURE_MAG_FILTER: Int
   val TEXTURE_MIN_FILTER: Int
   val NEAREST: Int
@@ -51,6 +52,37 @@ trait Context {
   type GLVertexAttributeLocation = Int
   type GLTexture
 
+  case class AsUnsignedShort[T](val data: Array[T])
+
+  trait BufferDataDispatch[T] {
+    //def apply(target: Int, data: AsUnsignedShort, usage: Int): Unit
+    def apply(target: Int, data: T, usage: Int): Unit
+  }
+
+  object BufferDataDispatch {
+
+    implicit object AsUnsignedShort_Int_BufferDataDispatch extends BufferDataDispatch[AsUnsignedShort[Int]]{
+      @inline def apply(target: Int, data: AsUnsignedShort[Int], usage: Int): Unit = impl_glBufferDataUnsignedShort(target, data.data, usage)
+    }
+
+    implicit object AInt_BufferDataDispatch extends BufferDataDispatch[Array[Int]]{
+      @inline def apply(target: Int, data: Array[Int], usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+    }
+
+    implicit object SInt_BufferDataDispatch extends BufferDataDispatch[Seq[Int]]{
+      @inline def apply(target: Int, data: Seq[Int], usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+    }
+
+    implicit object AFloat_BufferDataDispatch extends BufferDataDispatch[Array[Float]]{
+      @inline def apply(target: Int, data: Array[Float], usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+    }
+
+    implicit object SFloat_BufferDataDispatch extends BufferDataDispatch[Seq[Float]]{
+      @inline def apply(target: Int, data: Seq[Float], usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+    }
+
+  }
+
   def uniformLocation_null: GLUniformLocation
   def uniformLocation_null_?(x: GLUniformLocation): Boolean
 
@@ -65,10 +97,17 @@ trait Context {
 
   @inline final def vertexAttributeLocation_null: GLVertexAttributeLocation = -1
   @inline final def vertexAttributeLocation_null_?(x: GLVertexAttributeLocation): Boolean = x == -1
-  
-  def checkGlError(): Unit
+
   val const:Constants
 
+  @inline final def checkGlError(): Unit={
+    val code = getError()
+    if ( code != const.NO_ERROR ) throw new GlGetErrorException(code)
+  }
+
+  def optCheckGlError(): Unit = checkGlError()
+
+  def impl_glGetError(): Int
   def impl_glClear(mask: Int): Unit
   def impl_glClearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit
   def impl_glViewport(x: Int, y: Int, width: Int, height: Int): Unit
@@ -95,8 +134,12 @@ trait Context {
   def impl_glBindBuffer(target: Int, buffer: GLBuffer): Unit
   def impl_glCreateBuffer(): GLBuffer
   def impl_glDeleteBuffer(buffer: GLBuffer): Unit
-  def impl_glBufferData(target: Int, data: Array[Float], usage: Int): Unit
-  def impl_glBufferData(target: Int, data: Seq[Float], usage: Int): Unit
+  def impl_glBufferDataFloat(target: Int, data: Array[Float], usage: Int): Unit
+  def impl_glBufferDataFloat(target: Int, data: Seq[Float], usage: Int): Unit
+  def impl_glBufferDataInt(target: Int, data: Array[Int], usage: Int): Unit
+  def impl_glBufferDataInt(target: Int, data: Seq[Int], usage: Int): Unit
+  def impl_glBufferDataUnsignedShort(target: Int, data: Array[Int], usage: Int): Unit
+  def impl_glBufferDataUnsignedShort(target: Int, data: Seq[Int], usage: Int): Unit
   def impl_glVertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit
   def impl_glEnableVertexAttribArray(index: Int): Unit
   def impl_glDisableVertexAttribArray(index: Int): Unit
@@ -107,6 +150,7 @@ trait Context {
   def impl_glUniform1i(location: GLUniformLocation, v: Int): Unit
   def impl_glUniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit
   def impl_glDrawArrays(mode: Int, first: Int, count: Int): Unit
+  def impl_glDrawElements(mode: Int, count: Int, `type`: Int, offset: Int): Unit
   def impl_glGenTexture(): GLTexture
   def impl_glDeleteTextures(texture: GLTexture): Unit
   def impl_glIsTexture(texture: GLTexture): Boolean
@@ -119,85 +163,87 @@ trait Context {
 
   def currentProgram(): GLProgram
 
+  @inline final def getError(): Int=impl_glGetError()
+
   @inline final def clearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit={
     impl_glClearColor(red, green, blue, alpha)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def clear(mask: Int): Unit={
     impl_glClear(mask)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def viewport(x: Int, y: Int, width: Int, height: Int) {
     impl_glViewport(x, y, width, height)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def enable(cap: Int) {
     impl_glEnable(cap)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def disable(cap: Int) {
     impl_glDisable(cap)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def blendFunc(sfactor: Int, dfactor: Int): Unit = {
     impl_glBlendFunc(sfactor, dfactor)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def getInteger(pname: Int): Int = {
     val r = impl_glGetIntegerv(pname)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def createShader(shaderType: Int): GLShader = {
     val r = impl_glCreateShader(shaderType)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def deleteShader(shader: GLShader): Unit={
     impl_glDeleteShader(shader)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def shaderSource(shader: GLShader, src: String): Unit={
     impl_glShaderSource(shader, src)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def compileShader(shader: GLShader): Unit={
     impl_glCompileShader(shader)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def getShaderiv(shader: GLShader, pname: Int): Int = {
     val r = impl_glGetShaderiv(shader, pname)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def getShaderbv(shader: GLShader, pname: Int): Boolean = {
     val r = impl_glGetShaderbv(shader, pname)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
 
   @inline final def getShaderInfoLog(shader: GLShader): String ={
     val r = impl_getShaderInfoLog(shader)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def getProgramInfoLog(program: GLProgram): String ={
     val r = impl_getProgramInfoLog(program)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
@@ -205,166 +251,166 @@ trait Context {
 
   @inline final def createProgram(): GLProgram = {
     val r = impl_glCreateProgram()
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def getProgramiv(program: GLProgram, pname: Int): Int = {
     val r = impl_glGetProgramiv(program, pname)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def getProgrambv(program: GLProgram, pname: Int): Boolean = {
     val r = impl_glGetProgrambv(program, pname)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def deleteProgram(program: GLProgram): Unit={
     impl_glDeleteProgram(program)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def attachShader(program: GLProgram, shader: GLShader): Unit={
     impl_glAttachShader(program, shader)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def bindAttributeLocation(program: GLProgram, index: Int, name: String): Unit={
     impl_glBindAttribLocation(program, index, name)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def linkProgram(program: GLProgram): Unit={
     impl_glLinkProgram(program)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def useProgram(program: GLProgram): Unit={
     impl_glUseProgram(program)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def bindBuffer(target: Int, buffer: GLBuffer): Unit ={
     impl_glBindBuffer(target, buffer)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def createBuffer(): GLBuffer={
     val r=impl_glCreateBuffer()
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def deleteBuffer(buffer: GLBuffer): Unit={
     impl_glDeleteBuffer(buffer)
-    checkGlError()
+    optCheckGlError()
   }
 
-  @inline final def bufferData(target: Int, data: Array[Float], usage: Int): Unit={
-    impl_glBufferData(target, data, usage)
-    checkGlError()
-  }
-
-  @inline final def bufferData(target: Int, data: Seq[Float], usage: Int): Unit={
-    impl_glBufferData(target, data, usage)
-    checkGlError()
+  @inline final def bufferData[T <: AnyRef](target: Int, data: T, usage: Int)(implicit dispatch: BufferDataDispatch[T]): Unit={
+    dispatch(target, data, usage)
+    optCheckGlError()
   }
 
   @inline final def vertexAttribPointer(indx: Int, size: Int, componentType: Int, normalized: Boolean, stride: Int, offset: Int): Unit={
     impl_glVertexAttribPointer(indx, size, componentType, normalized, stride, offset)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def enableVertexAttribArray(index: Int): Unit={
     impl_glEnableVertexAttribArray(index)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def disableVertexAttribArray(index: Int): Unit={
     impl_glDisableVertexAttribArray(index)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def getUniformLocation(program: GLProgram, name: String): GLUniformLocation={
     val r = impl_glGetUniformLocation(program, name)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def getAttribLocation(program: GLProgram, name: String): Int={
     val r = impl_glGetAttribLocation(program, name)
-    checkGlError()
+    optCheckGlError()
     r
   }
   
 
   @inline final def uniform1f(location: GLUniformLocation, x: Float): Unit={
     impl_glUniform1f(location, x)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def uniform4f(location: GLUniformLocation, v: Array[Float]): Unit={
     impl_glUniform4fv(location, v)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def uniform1i(location: GLUniformLocation, v: Int): Unit={
     impl_glUniform1i(location, v)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def uniformMatrix4fv(location: GLUniformLocation, transpose: Boolean, v: Array[Float]): Unit={
     impl_glUniformMatrix4fv(location, transpose, v)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def drawArrays(mode: Int, first: Int, count: Int): Unit={
     impl_glDrawArrays(mode, first, count)
-    checkGlError()
+    optCheckGlError()
+  }
+
+  @inline final def drawElements(mode: Int, count: Int, `type`: Int, offset: Int): Unit={
+    impl_glDrawElements(mode, count, `type`, offset)
+    optCheckGlError()
   }
 
   @inline final def IsTexture(texture: GLTexture): Boolean ={
     val r = impl_glIsTexture(texture)
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def genTextures(): GLTexture ={
     val r = impl_glGenTexture()
-    checkGlError()
+    optCheckGlError()
     r
   }
 
   @inline final def deleteTextures(texture: GLTexture): Unit={
     impl_glDeleteTextures(texture)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def activateTexture(texture: Int): Unit={
     impl_glActiveTexture(texture)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def bindTexture(target: Int, texture: GLTexture): Unit={
     impl_glBindTexture(target, texture)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def texParameter(target: Int, pname: Int, param: Float): Unit={
     impl_glTexParameterf(target, pname, param)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def texParameter(target: Int, pname: Int, param: Int): Unit={
     impl_glTexParameteri(target, pname, param)
-    checkGlError()
+    optCheckGlError()
   }
 
   @inline final def texImage2D(target: Int, level: Int, internalformat: Int, width: Int, height: Int, border: Int, format: Int, `type`: Int, pixels: Array[Byte]): Unit={
     impl_glTexImage2D(target, level, internalformat, width, height, border, format, `type`, pixels)
-    checkGlError()
+    optCheckGlError()
   }
 
 

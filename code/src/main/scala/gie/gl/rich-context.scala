@@ -36,16 +36,7 @@ trait RichContextCommon extends ContextUnbind {
 
   @inline final def get_maxVertexAttribs() = getInteger(const.MAX_VERTEX_ATTRIBS)
 
-  @inline final def createBuffer(target: Int, data: Seq[Float], usage: Int): GLBuffer={
-    val buffer = gl.createBuffer()
-    gl.bindBuffer(target, buffer)
-    gl.bufferData(target, data, usage)
-    gl.bindNullBuffer(target)
-
-    buffer
-  }
-
-  @inline final def createBuffer(target: Int, data: Array[Float], usage: Int): GLBuffer={
+  @inline final def createBuffer[T <: AnyRef](target: Int, data: T, usage: Int)(implicit dispatch: BufferDataDispatch[T]): GLBuffer={
     val buffer = gl.createBuffer()
     gl.bindBuffer(target, buffer)
     gl.bufferData(target, data, usage)
