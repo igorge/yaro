@@ -163,7 +163,7 @@ trait Context {
 
   def currentProgram(): GLProgram
 
-  @inline final def getError(): Int=impl_glGetError()
+  @inline final def getError(): Int = impl_glGetError()
 
   @inline final def clearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit={
     impl_glClearColor(red, green, blue, alpha)
