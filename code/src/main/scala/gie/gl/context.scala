@@ -28,12 +28,13 @@ trait Constants {
   val STATIC_DRAW: Int
   val DYNAMIC_DRAW: Int
   val STREAM_DRAW: Int
-  val FLOAT: Int
   val RGB: Int
   val RGBA: Int
   val BYTE: Int
   val UNSIGNED_BYTE: Int
   val UNSIGNED_SHORT: Int
+  val FLOAT: Int
+  val INT: Int
   val TEXTURE_MAG_FILTER: Int
   val TEXTURE_MIN_FILTER: Int
   val NEAREST: Int
@@ -52,33 +53,53 @@ trait Context {
   type GLVertexAttributeLocation = Int
   type GLTexture
 
-  case class AsUnsignedShort[T](val data: Array[T])
+  case class AsUnsignedShort[T <: AnyRef](val data: T)
 
-  trait BufferDataDispatch[T] {
-    //def apply(target: Int, data: AsUnsignedShort, usage: Int): Unit
+  trait BufferDataDispatch[T <: AnyRef] {
     def apply(target: Int, data: T, usage: Int): Unit
+    def size(data: T): Int
+    def componentType: Int
   }
 
   object BufferDataDispatch {
 
-    implicit object AsUnsignedShort_Int_BufferDataDispatch extends BufferDataDispatch[AsUnsignedShort[Int]]{
-      @inline def apply(target: Int, data: AsUnsignedShort[Int], usage: Int): Unit = impl_glBufferDataUnsignedShort(target, data.data, usage)
+    implicit object AsUnsignedShort_Int_BufferDataDispatch extends BufferDataDispatch[AsUnsignedShort[Array[Int]]]{
+      type SeqT = AsUnsignedShort[Array[Int]]
+
+      @inline def apply(target: Int, data: SeqT, usage: Int): Unit = impl_glBufferDataUnsignedShort(target, data.data, usage)
+      @inline def size(data: SeqT): Int = data.data.size
+      @inline def componentType: Int = const.UNSIGNED_SHORT
     }
 
     implicit object AInt_BufferDataDispatch extends BufferDataDispatch[Array[Int]]{
-      @inline def apply(target: Int, data: Array[Int], usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+      type SeqT = Array[Int]
+
+      @inline def apply(target: Int, data: SeqT, usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+      @inline def size(data: SeqT): Int = data.size
+      @inline def componentType: Int = const.INT
     }
 
     implicit object SInt_BufferDataDispatch extends BufferDataDispatch[Seq[Int]]{
-      @inline def apply(target: Int, data: Seq[Int], usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+      type SeqT = Seq[Int]
+
+      @inline def apply(target: Int, data: SeqT, usage: Int): Unit = impl_glBufferDataInt(target, data, usage)
+      @inline def size(data: SeqT): Int = data.size
+      @inline def componentType: Int = const.INT
     }
 
     implicit object AFloat_BufferDataDispatch extends BufferDataDispatch[Array[Float]]{
-      @inline def apply(target: Int, data: Array[Float], usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+      type SeqT = Array[Float]
+
+      @inline def apply(target: Int, data: SeqT, usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+      @inline def size(data: SeqT): Int = data.size
+      @inline def componentType: Int = const.FLOAT
     }
 
     implicit object SFloat_BufferDataDispatch extends BufferDataDispatch[Seq[Float]]{
-      @inline def apply(target: Int, data: Seq[Float], usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+      type SeqT = Seq[Float]
+      @inline def apply(target: Int, data: SeqT, usage: Int): Unit = impl_glBufferDataFloat(target, data, usage)
+      @inline def size(data: SeqT): Int = data.size
+      @inline def componentType: Int = const.FLOAT
     }
 
   }

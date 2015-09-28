@@ -132,7 +132,7 @@ object app extends JSApp with LazyLogging {
       assume(canvas ne null)
 
       val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.SML_Matrix4FRich with LazyLogging {
-        //@inline override def checkGlError(): Unit = { /*noop*/ }
+        //@inline override def optCheckGlError(): Unit = { /*noop*/ }
       }
 
       val geom = gie.geom.square.gen(1,1,1)
@@ -284,7 +284,7 @@ object app extends JSApp with LazyLogging {
         val indexedBox = square.genIndex(1,1,1)
 
 
-        val squareNode= new renderer.TrianglesArray(geom._1, Some(geom._2))
+        val squareNode= new renderer.TrianglesArray( renderer.staticArrayBuffer(geom._1), Some(renderer.staticArrayBuffer(geom._2)))
         squareNode
           .addAttribute(new renderer.Texture2D(tex1,0))
           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
@@ -302,8 +302,14 @@ object app extends JSApp with LazyLogging {
 //                  .addVertexAttributeValue( attributesNames.a_position, 3, gl.const.FLOAT){ squareBuffer}
 //                  .addVertexAttributeValue( attributesNames.a_tex_coordinate,  2, gl.const.FLOAT ){squareTexCoord}
 
-        //rootGroup.children += node
-        rootGroup.children += node //new renderer.Geode(squareNode)
+        val squareNodeIndex= {
+          val n = new renderer.TrianglesIndexedArray( renderer.staticElementArrayBuffer( renderer.gl.AsUnsignedShort(indexedBox._1) ), renderer.staticArrayBuffer(indexedBox._2), Some(renderer.staticArrayBuffer(indexedBox._3)))
+          n.addAttribute(new renderer.Texture2D(tex1,0))
+           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+          n
+        }
+
+        rootGroup.children += new renderer.Geode(squareNodeIndex)
         rootGroup.addAttribute( attr_program )
 
         def tick(oldTime: Long)(t:Double): Unit =try {

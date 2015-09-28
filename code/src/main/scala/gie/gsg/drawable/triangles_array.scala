@@ -1,37 +1,38 @@
 package gie.gsg
 
-import gie.gsg.state_attribute.VertexAttributeAttributeComponent
+import gie.gsg.state_attribute.{IndexBufferAttributeComponent, VertexAttributeAttributeComponent}
 import gie.sml.MatrixRead4F
 import slogging.LoggerHolder
 
 trait TrianglesArrayComponent {
-  this: RenderContext with ProgramHolderComponent with state_attribute.GlProgramAttributeComponent with VertexAttributeAttributeComponent with DrawableComponent with GeometryComponent with DrawableVisitorComponent with StateSetComponent with WithStateSetComponent with LoggerHolder=>
+  this: RenderContext with BufferComponent with IndexBufferAttributeComponent with ProgramHolderComponent with state_attribute.GlProgramAttributeComponent with VertexAttributeAttributeComponent with DrawableComponent with GeometryComponent with DrawableVisitorComponent with StateSetComponent with WithStateSetComponent with LoggerHolder=>
 
-  abstract class TrianglesArrayAbstract(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends Geometry with WithStateSetImpl {
+  abstract class TrianglesArrayAbstract(vertexData: GLBufferLike, texCoordData: Option[GLBufferLike] = None, vertexColorData: Option[GLBufferLike] = None) extends Geometry with WithStateSetImpl {
     protected var init: StateSet=>Unit = doInit _
     protected def doInit(parentMergedStateSet: StateSet): Unit
     val verticesCount:Int
 
     val m_vertexData = {
       assume(vertexData.size % 3 == 0)
-      gl.createBuffer(gl.const.ARRAY_BUFFER, vertexData, gl.const.STATIC_DRAW)
+      assume(vertexData.bufferTarget == gl.const.ARRAY_BUFFER)
+      vertexData.glBuffer
     }
 
     val m_texCoordData = texCoordData.map{tx=>
       assume(tx.size%2==0)
       assume(tx.size/2==vertexData.size/3)
-      gl.createBuffer(gl.const.ARRAY_BUFFER, tx, gl.const.STATIC_DRAW)
+      tx.glBuffer
     }
 
     val m_vertexColorData = vertexColorData.map{cd=>
       assume(cd.size%3==0)
       assume(cd.size/3==vertexData.size/3, s"${cd.size} != ${vertexData.size}")
-      gl.createBuffer(gl.const.ARRAY_BUFFER, cd, gl.const.STATIC_DRAW)
+      cd.glBuffer
     }
 
   }
 
-  class TrianglesArray(vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
+  class TrianglesArray(vertexData: GLBufferLike, texCoordData: Option[GLBufferLike] = None, vertexColorData: Option[GLBufferLike] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
 
     val verticesCount = vertexData.size/3
 
@@ -66,20 +67,21 @@ trait TrianglesArrayComponent {
 
   }
 
-  class TrianglesIndexedArray(elementsData: Array[Float], vertexData: Array[Float], texCoordData: Option[Array[Float]] = None, vertexColorData: Option[Array[Float]] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
+  class TrianglesIndexedArray(elementsData: GLBufferLike, vertexData: GLBufferLike, texCoordData: Option[GLBufferLike] = None, vertexColorData: Option[GLBufferLike] = None) extends TrianglesArrayAbstract(vertexData, texCoordData, vertexColorData) {
 
-    val verticesCount = elementsData.size / 3
+    val verticesCount = elementsData.size
 
-    val m_elementsData = {
-      assume(elementsData.size % 3 == 0)
-      gl.createBuffer(gl.const.ELEMENT_ARRAY_BUFFER, elementsData, gl.const.STATIC_DRAW)
-    }
+    assume(elementsData.bufferTarget==gl.const.ELEMENT_ARRAY_BUFFER)
+    assume(elementsData.size % 3 == 0)
+    assume(elementsData.componentType == gl.const.UNSIGNED_SHORT)
 
     def doInit(parentMergedStateSet: StateSet): Unit = {
-      logger.debug("TrianglesArray.doInit()")
+      logger.debug("TrianglesIndexArray.doInit()")
 
       val program = StateSet.getProgram(this.stateSet, parentMergedStateSet)
       if (program eq null) throw new Exception("No program specified for drawable")
+
+      this.addAttribute( new IndexBufferAttribute(elementsData.glBuffer) )
 
       this.addVertexAttributeValue(program.vertexCoordinatesAttribute.name, 3, gl.const.FLOAT) {
         m_vertexData
@@ -98,13 +100,13 @@ trait TrianglesArrayComponent {
       }
 
       init = (_) => {}
-      logger.debug("TrianglesArray.doInit() exit")
+      logger.debug("TrianglesIndexArray.doInit() exit")
     }
 
     private[gsg] def draw(parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit = {
       //logger.debug("TrianglesArray.draw(...)")
       init(parentMergedStateSet)
-      //      api_renderTrianglesArray(this, parentMergedStateSet, transformation)
+      api_renderTrianglesIndexArray(this, parentMergedStateSet, transformation)
       //logger.debug("TrianglesArray.draw(...) exit")
     }
 

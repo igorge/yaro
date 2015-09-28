@@ -40,6 +40,7 @@ object WebGLContext extends Constants {
   final val BYTE: Int = dom.raw.WebGLRenderingContext.BYTE
   final val UNSIGNED_BYTE: Int = dom.raw.WebGLRenderingContext.UNSIGNED_BYTE
   final val UNSIGNED_SHORT: Int = dom.raw.WebGLRenderingContext.UNSIGNED_SHORT
+  final val INT: Int = dom.raw.WebGLRenderingContext.INT
   final val TEXTURE_MAG_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MAG_FILTER
   final val TEXTURE_MIN_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MIN_FILTER
   final val NEAREST: Int = dom.raw.WebGLRenderingContext.NEAREST

@@ -40,6 +40,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   with WithStateSetComponent
   with StateAttributeVisitorComponent
   with NodeVisitorComponent
+  with BufferComponent
   with StrictLogging
 { renderer =>
 
@@ -77,6 +78,15 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     gl.drawArrays(gl.const.TRIANGLES, 0, drawable.verticesCount)
 
 //    logger.debug(s"api_renderTrianglesArray(...) exit")
+  }
+
+  private[gsg] def api_renderTrianglesIndexArray(drawable: TrianglesIndexedArray, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit ={
+    //  logger.debug(s"api_renderTrianglesArray(..., ${parentMergedStateSet}, ...)")
+    val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
+    impl_applyStateSet(selfSS)
+    m_activeProgram.transformationMatrix = transformation
+
+    gl.drawElements(gl.const.TRIANGLES, drawable.verticesCount, gl.const.UNSIGNED_SHORT, 0)
   }
 
   private object impl_renderNodeVisitor extends NodeVisitor {
