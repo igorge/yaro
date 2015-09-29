@@ -1,7 +1,7 @@
 package gie.gl
 
 
-trait RichProgramTrait {
+trait RichProgramComponent {
   this: Context with RichUniformTrait with RichVertexAttributeComponent =>
 
   trait NameToLocationReadMaps {

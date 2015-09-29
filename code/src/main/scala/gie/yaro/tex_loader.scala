@@ -11,7 +11,7 @@ import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
-object TextureManager {
+object TextureDataLoader {
 
   def load(dataRaw: Future[IndexedSeq[Byte]], alpha: Int)(implicit executor: ExecutionContext): Future[(Int,Int,Array[Byte])] ={
     async {
@@ -52,14 +52,13 @@ object TextureManager {
 }
 
 
+trait TextureManagerComponent { this: RendererContextComponent with RoStoreComponent with RoResourceComponent with ExecutionContextComponent  =>
+  
+  case class TextureData(w: Int,h: Int,data: Array[Byte])
 
-trait TextureManagerComponent { this: RoStoreComponent with RoResourceComponent with ExecutionContextComponent =>
+  class TextureDataLoader(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging {
 
-  type TextureData = (Int,Int,Array[Byte])
-
-  class TextureManager(urlResolver: String=>Future[IndexedSeq[Byte]]) extends LazyLogging {
-
-    import TextureManager._
+    import TextureDataLoader._
 
     private case class CachedTextureData(width: Int, height: Int, alpha: Int, data:Array[Byte])
 
@@ -73,14 +72,15 @@ trait TextureManagerComponent { this: RoStoreComponent with RoResourceComponent 
       }
     }
 
-    def get(key: String, alpha: Int): Future[(Int,Int,Array[Byte])] = async {
+    def get(key: String, alpha: Int): Future[TextureData] = async {
       val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
       assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
-      (texData.width, texData.height, texData.data)
+      TextureData(texData.width, texData.height, texData.data)
     }
 
   }
 
 
-  lazy val textureManager = new TextureManager( roResource.openTexture _ )
+  lazy val textureDataLoader = new TextureDataLoader( roResource.openTexture _ )
+  //lazy val textureManager = new TextureDataLoader( roResource.openTexture _ )
 }

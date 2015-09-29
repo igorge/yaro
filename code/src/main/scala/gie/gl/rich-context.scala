@@ -50,7 +50,7 @@ trait RichContextCommon extends ContextUnbind {
 trait RichContext
   extends RichUniformTrait
   with    RichVertexAttributeComponent
-  with    RichProgramTrait
+  with    RichProgramComponent
   with    RichShaderTrait
   with    RichContextCommon
   with    LoggerHolder {

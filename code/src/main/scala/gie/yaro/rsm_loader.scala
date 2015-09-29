@@ -7,6 +7,8 @@ import scala.async.Async.{async, await}
 import scodec.bits.{ByteVector, BitVector}
 import gie.yaro.rsm.file.{codec => rsmCodec, Vector3I, Face, Node, RsmFileData}
 
+import scala.language.existentials
+
 class ModelNode {
 
 }
@@ -22,7 +24,7 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
 
       val texturesData = await {
         Future.fold(rsmData.textureNames.view.zipWithIndex.map { case (texName, idx) =>
-          textureManager.get(texName, rsmData.header.alpha).map((_, idx))
+          textureDataLoader.get(texName, rsmData.header.alpha).map((_, idx))
         })(new Array[TextureData](rsmData.textureNames.size)) { case (buffer, (texData, idx)) =>
           assume(buffer(idx) eq null)
           buffer(idx) = texData
@@ -54,11 +56,14 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
         node.faces.view.filter( _.textureId == texId ).unzip{face=>
           (face.vertexIndex.toArray, face.texVertexIndex.toArray)
         } match {
-          case(vIdx, texIdx) => (vIdx.flatten.toArray.toSeq, texIdx.flatten.toArray.toSeq)
+          case(vIdx, texIdx) => (vIdx.flatten, texIdx.flatten)
         }
       }
 
-      (0 until texturesIds.size) map impl_processNodeByTexId foreach{v=> logger.debug(v.toString)}
+      //for each texture generate face, vertices and texture uv arrays
+      (0 until texturesIds.size) map impl_processNodeByTexId foreach{
+        v=> logger.debug(v.toString)
+      }
 
 
       Unit

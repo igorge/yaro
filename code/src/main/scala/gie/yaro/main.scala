@@ -94,13 +94,43 @@ object shaderSource {
     """.stripMargin
 }
 
+
+
 object app extends JSApp with LazyLogging {
 
   implicit val appExecutionContext:ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-
   final val NANOS_IN_SEC      = 1000000000L
   final val NANOS_IN_MILLISEC = 1000000L
+
+  class OpenGLContext(canvas: dom.raw.WebGLRenderingContext)
+    extends gie.gl.WebGLContext( canvas )
+    with gie.gl.RichContext
+    with gie.gl.SML_Matrix4FRich
+    with LazyLogging {
+
+    //@inline override def optCheckGlError(): Unit = { /*noop*/ }
+  }
+
+  type Renderer = gsg.Renderer[OpenGLContext]
+
+
+  def newRoServices(rendererP: Renderer) ={
+
+    val roServices = new TextureManagerComponent
+      with RendererContextComponent
+      with RsmLoaderComponent
+      with RoStoreComponent
+      with RoResourceComponent
+      with ExecutionContextComponent
+      with LazyLogging
+    {
+      val renderer:rendererP.type = rendererP
+      implicit def executionContext: ExecutionContext = appExecutionContext
+    }
+
+    roServices
+  }
 
   def main(): Unit = {
     import gie.sml._
@@ -113,17 +143,6 @@ object app extends JSApp with LazyLogging {
 
     //dom.alert("Hi from Scala-js-dom")
 
-    val roServices = new TextureManagerComponent
-      with RsmLoaderComponent
-      with RoStoreComponent
-      with RoResourceComponent
-      with ExecutionContextComponent
-      with LazyLogging
-    {
-      implicit def executionContext: ExecutionContext = appExecutionContext
-    }
-
-
 
     dom.document.addEventListener("DOMContentLoaded", (e:dom.Event)=>{
 
@@ -131,9 +150,10 @@ object app extends JSApp with LazyLogging {
       val canvas = dom.document.getElementById("render-canvas").asInstanceOf[dom.html.Canvas]
       assume(canvas ne null)
 
-      val gl = new gie.gl.WebGLContext( canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext] ) with gie.gl.RichContext with gie.gl.SML_Matrix4FRich with LazyLogging {
-        //@inline override def optCheckGlError(): Unit = { /*noop*/ }
-      }
+      val gl = new OpenGLContext(canvas.getContext("webgl").asInstanceOf[dom.raw.WebGLRenderingContext])
+
+      val renderer = new Renderer(gl)
+      val roServices = newRoServices(renderer)
 
       val geom = gie.geom.square.gen(1,1,1)
       val squareBuffer = gl.createBuffer(gl.const.ARRAY_BUFFER, geom._1, gl.const.STATIC_DRAW)
@@ -149,7 +169,6 @@ object app extends JSApp with LazyLogging {
       )
 
 
-      val renderer = new gsg.Renderer(gl)
 
       object attributesNames {
         val a_position = "a_position"
@@ -168,7 +187,7 @@ object app extends JSApp with LazyLogging {
           m
         }
 
-        val p = renderer.gl.Program()
+        val p = roServices.renderer.gl.Program()
 
         val mapToLocations = renderer.gl.nameToLocationsMaps()
 
@@ -223,7 +242,7 @@ object app extends JSApp with LazyLogging {
       val attr_program = new renderer.GlProgramAttribute( programHolder)
 
       def loadTex(path: String, alpha: Int) = async {
-        val (w,h,data) = await(roServices.textureManager.get(path, alpha))
+        val roServices.TextureData(w,h,data) = await(roServices.textureDataLoader.get(path, alpha))
         gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
           gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
           gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
