@@ -53,16 +53,16 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
       }
 
       def impl_processNodeByTexId(texId: Int) = {
-        node.faces.view.filter( _.textureId == texId ).unzip{face=>
-          (face.vertexIndex.toArray, face.texVertexIndex.toArray)
-        } match {
+        node.faces.view.filter( _.textureId == texId ).unzip{face=>(face.vertexIndex.toArray, face.texVertexIndex.toArray)}
+        match {
           case(vIdx, texIdx) => (vIdx.flatten, texIdx.flatten)
         }
       }
 
       //for each texture generate face, vertices and texture uv arrays
       (0 until texturesIds.size) map impl_processNodeByTexId foreach{
-        v=> logger.debug(v.toString)
+        v=>
+          logger.debug(v._1.toArray.toSeq.toString)
       }
 
 

@@ -241,16 +241,7 @@ object app extends JSApp with LazyLogging {
 
       val attr_program = new renderer.GlProgramAttribute( programHolder)
 
-      def loadTex(path: String, alpha: Int) = async {
-        val roServices.TextureData(w,h,data) = await(roServices.textureDataLoader.get(path, alpha))
-        gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
-          gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
-          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
-          gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
-
-          texture
-        }
-      }
+      def loadTex(path: String, alpha: Int) = roServices.textureManager.get(alpha)(path)
 
 
       def createSolidTexture(r: Byte, g: Byte, b: Byte, a: Byte)={

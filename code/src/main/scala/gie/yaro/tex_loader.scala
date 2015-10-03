@@ -3,6 +3,7 @@ package gie.yaro
 import gie.ByteOps
 import gie.scodec.BmpCodecs.Bmp256Decoder
 import gie.Bmp._
+import gie.utils.Cached
 
 import scodec.bits.BitVector
 import slogging.LazyLogging
@@ -62,7 +63,8 @@ trait TextureManagerComponent { this: RendererContextComponent with RoStoreCompo
 
     private case class CachedTextureData(width: Int, height: Int, alpha: Int, data:Array[Byte])
 
-    private val m_cache = new collection.mutable.HashMap[String, Future[CachedTextureData]]() //XXX: this is fine for JS as we have only 1 thread, so no synchronization is required
+
+    private val m_cache = new Cached[String, Future[CachedTextureData]]()
 
     private def impl_loadTexture(key: String, alpha: Int): Future[CachedTextureData] ={
       logger.debug(s"Texture cache miss: ${key}")
@@ -73,14 +75,38 @@ trait TextureManagerComponent { this: RendererContextComponent with RoStoreCompo
     }
 
     def get(key: String, alpha: Int): Future[TextureData] = async {
-      val texData = await( m_cache.getOrElseUpdate(key, impl_loadTexture(key, alpha) ) )
+      val texData = await( m_cache.get(key)(impl_loadTexture(key, alpha) ) )
       assert(texData.alpha==alpha, s"texData.alpha==alpha is false: ${texData.alpha}!=${alpha}")
       TextureData(texData.width, texData.height, texData.data)
     }
 
   }
 
+  class TextureLoader extends LazyLogging {
+    import renderer.gl
+
+    private val m_cache = new Cached[String, Future[gl.GLTexture]]()
+
+    private def impl_loadTex(path: String, alpha: Int) = async {
+
+      val TextureData(w,h,data) = await(textureDataLoader.get(path, alpha))
+      gl.withBoundTexture(gl.const.TEXTURE_2D, gl.genTextures()){ texture=>
+        gl.texImage2D(gl.const.TEXTURE_2D, 0, gl.const.RGBA, w, h, 0, gl.const.RGBA, gl.const.UNSIGNED_BYTE, data)
+        gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MAG_FILTER, gl.const.NEAREST)
+        gl.texParameter(gl.const.TEXTURE_2D, gl.const.TEXTURE_MIN_FILTER, gl.const.NEAREST)
+
+        texture
+      }
+    }
+
+    def get(alpha: Int)(path: String): Future[gl.GLTexture] = m_cache.get(path){
+      logger.debug(s"GLTexture cache miss: ${path}")
+      impl_loadTex(path, alpha)
+    }
+
+  }
+
 
   lazy val textureDataLoader = new TextureDataLoader( roResource.openTexture _ )
-  //lazy val textureManager = new TextureDataLoader( roResource.openTexture _ )
+  lazy val textureManager = new TextureLoader()
 }
