@@ -5,8 +5,6 @@ import gie.gsg.state_attribute.StateAttributeVisitorComponent
 import gie.sml.{Matrix4F, MatrixRead4F}
 import slogging.StrictLogging
 
-import scala.collection.mutable.ArrayBuffer
-
 
 trait RenderContext {
   this: ProgramHolderComponent  =>

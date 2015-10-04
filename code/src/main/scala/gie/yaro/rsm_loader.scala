@@ -2,6 +2,7 @@ package gie.yaro
 
 import slogging.LazyLogging
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Future
 import scala.async.Async.{async, await}
 import scodec.bits.{ByteVector, BitVector}
@@ -14,20 +15,23 @@ class ModelNode {
 }
 
 
-trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent with RoResourceComponent with ExecutionContextComponent =>
+trait RsmLoaderComponent { this: RendererContextComponent with TextureManagerComponent with RoStoreComponent with RoResourceComponent with ExecutionContextComponent =>
 
   class RsmLoaderImpl() extends LazyLogging {
 
+    import renderer.gl
 
     def load(path: String): Future[Unit] = async {
       val rsmData = rsmCodec.decode( BitVector( await( roResource.openRsm(path) ) ) ).require.value
 
+      val textureLoader = textureManager.get(rsmData.header.alpha)_
+
       val texturesData = await {
         Future.fold(rsmData.textureNames.view.zipWithIndex.map { case (texName, idx) =>
-          textureDataLoader.get(texName, rsmData.header.alpha).map((_, idx))
-        })(new Array[TextureData](rsmData.textureNames.size)) { case (buffer, (texData, idx)) =>
+          textureLoader(texName).map((_, idx))
+        })(new Array[Tuple1[gl.GLTexture]](rsmData.textureNames.size)) { case (buffer, (texData, idx)) =>
           assume(buffer(idx) eq null)
-          buffer(idx) = texData
+          buffer(idx) = Tuple1(texData)
           buffer
         }
       }
@@ -40,7 +44,7 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
 
     }
 
-    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:Array[TextureData]): Future[Unit] = async {
+    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:IndexedSeq[Tuple1[gl.GLTexture]]): Future[Unit] = async {
       import node._
 
       logger.debug(s"processing node: ${node.name}")
@@ -53,6 +57,7 @@ trait RsmLoaderComponent { this: TextureManagerComponent with RoStoreComponent w
       }
 
       def impl_processNodeByTexId(texId: Int) = {
+        logger.debug(s"processing node: '${node.name}', texture id: ${texId}, named: ${impl_getTextFromIdx(texId)}")
         node.faces.view.filter( _.textureId == texId ).unzip{face=>(face.vertexIndex.toArray, face.texVertexIndex.toArray)}
         match {
           case(vIdx, texIdx) => (vIdx.flatten, texIdx.flatten)
