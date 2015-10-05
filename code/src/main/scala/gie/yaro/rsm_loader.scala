@@ -1,5 +1,6 @@
 package gie.yaro
 
+import gie.sml.Vector3F
 import slogging.LazyLogging
 
 import scala.collection.mutable.ArrayBuffer
@@ -7,6 +8,7 @@ import scala.concurrent.Future
 import scala.async.Async.{async, await}
 import scodec.bits.{ByteVector, BitVector}
 import gie.yaro.rsm.file.{codec => rsmCodec, Vector3I, Face, Node, RsmFileData}
+import gie.ImplicitPipe._
 
 import scala.language.existentials
 
@@ -21,7 +23,7 @@ trait RsmLoaderComponent { this: RendererContextComponent with TextureManagerCom
 
     import renderer.gl
 
-    def load(path: String): Future[Unit] = async {
+    def load(path: String): Future[renderer.Node] = async {
       val rsmData = rsmCodec.decode( BitVector( await( roResource.openRsm(path) ) ) ).require.value
 
       val textureLoader = textureManager.get(rsmData.header.alpha)_
@@ -36,16 +38,19 @@ trait RsmLoaderComponent { this: RendererContextComponent with TextureManagerCom
         }
       }
 
-      await{
-        Future.sequence( rsmData.nodes.map( impl_processNode(_, rsmData, texturesData) ) )
-      }
 
+      val nodes = await{ Future.sequence( rsmData.nodes.map( impl_processNode(_, rsmData, texturesData) ) ) }
 
+      nodes.foldLeft( new renderer.Group() )( _ += _)
 
     }
 
-    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:IndexedSeq[Tuple1[gl.GLTexture]]): Future[Unit] = async {
+    private def impl_processNode(node: Node, rsmData: RsmFileData, textures:IndexedSeq[Tuple1[gl.GLTexture]]): Future[renderer.Node] = async {
       import node._
+
+      import gl.BufferDataDispatch._
+
+      val rootNode = new renderer.Group()
 
       logger.debug(s"processing node: ${node.name}")
 
@@ -57,34 +62,52 @@ trait RsmLoaderComponent { this: RendererContextComponent with TextureManagerCom
       }
 
       def impl_processNodeByTexId(texId: Int) = {
-        logger.debug(s"processing node: '${node.name}', texture id: ${texId}, named: ${impl_getTextFromIdx(texId)}")
-        node.faces.view.filter( _.textureId == texId ).unzip{face=>(face.vertexIndex.toArray, face.texVertexIndex.toArray)}
-        match {
-          case(vIdx, texIdx) => (vIdx.flatten, texIdx.flatten)
+        logger.debug(s"processing node: '${node.name}', texture id: ${texId}")
+        val vertices = new ArrayBuffer[Float]()
+        val textureUVs = new ArrayBuffer[Float]()
+
+        def addVertex(vertexIdx: Int, texVertexIdx: Int): Unit ={
+          val newBaseIdx = vertices.size / 3
+          vertices ++= node.vertices( vertexIdx ).toArray
+          textureUVs ++= node.texCoords( texVertexIdx ) |> (uv=>Array(uv.u, -1f * uv.v))
         }
+
+        node.faces.view.filter( _.textureId == texId ).foreach{face=>
+          addVertex(face.vertexIndex.x, face.texVertexIndex.x)
+          addVertex(face.vertexIndex.y, face.texVertexIndex.y)
+          addVertex(face.vertexIndex.z, face.texVertexIndex.z)
+        }
+
+        assume(vertices.size % 3 == 0)
+        assume(textureUVs.size % 2 == 0)
+
+        val drawable = new renderer.TrianglesArray( renderer.staticArrayBuffer(vertices.toSeq),  Some(renderer.staticArrayBuffer(textureUVs.toSeq)))
+
+//        case class BoundingBox(min: Vector3F, max: Vector3F)
+//
+//        val bb  = vertices.view.toSeq.sliding(3).foldLeft[Option[BoundingBox]](None){ (bb, p)=>
+//
+//        logger.debug(s"${p.toArray.toSeq}")
+//
+//          Some( bb.map( bbb=> BoundingBox(Vector3F( bbb.min.v0 min p(0), bbb.min.v1 min p(1), bbb.min.v2 min p(2)  ),
+//          Vector3F( bbb.max.v0 max p(0), bbb.max.v1 max p(1), bbb.max.v2 max p(2)  )
+//          )  ).getOrElse(BoundingBox( Vector3F(p),Vector3F(p)) ) )
+//        }
+//
+//        logger.debug(s"BB: ${bb}")
+
+         drawable.addAttribute(new renderer.Texture2D(impl_getTextFromIdx(texId)._1, 0))
+
+        drawable
       }
 
       //for each texture generate face, vertices and texture uv arrays
-      (0 until texturesIds.size) map impl_processNodeByTexId foreach{
-        v=>
-          logger.debug(v._1.toArray.toSeq.toString)
+      (0 until texturesIds.size) map impl_processNodeByTexId foreach{ v=>
+        rootNode += new renderer.Geode(v)
       }
 
 
-      Unit
-
-//      val maxVIdxX = node.faces.map(_.vertexIndex.x).reduce(_ max _)
-//      val maxVIdxY = node.faces.map(_.vertexIndex.y).reduce(_ max _)
-//      val maxVIdxZ = node.faces.map(_.vertexIndex.z).reduce(_ max _)
-//
-//      val maxTexIdx= {
-//        node.faces.map(_.texVertexIndex.x) ++ node.faces.map(_.texVertexIndex.y) ++ node.faces.map(_.texVertexIndex.z)
-//      }.reduce(_ max _)
-//
-//      logger.debug(s"max: (${maxVIdxX}, ${maxVIdxY}, ${maxVIdxZ}), count: ${node.vertices.size}")
-//
-//      logger.debug(s"max tex: ${maxTexIdx}, count: ${node.texCoords.size}")
-
+      rootNode
     }
   }
 

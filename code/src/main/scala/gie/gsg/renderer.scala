@@ -44,7 +44,15 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
   type GLT = GLType
 
-  private def impl_genSelfStateSet(selfSS: StateSet, parentSS: StateSet): StateSet ={
+  private def debug_trace[R](name: Symbol)(body: => R):R = {
+    logger.debug(s"BEGIN: ${name}")
+    var r = body
+    logger.debug(s"END: ${name}")
+    r
+  }
+
+  private def impl_genSelfStateSet(selfSS: StateSet, parentSS: StateSet): StateSet = //debug_trace('impl_genSelfStateSet)
+  {
     if(selfSS eq null) {
       parentSS
     } else {
@@ -68,14 +76,16 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   }
 
   private[gsg] def api_renderTrianglesArray(drawable: TrianglesArray, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit ={
-  //  logger.debug(s"api_renderTrianglesArray(..., ${parentMergedStateSet}, ...)")
+    //logger.debug(s"BEGIN: api_renderTrianglesArray(..., ${parentMergedStateSet}, ...)")
     val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
+    //logger.debug(s"api_renderTrianglesArray: impl_applyStateSet(...)")
     impl_applyStateSet(selfSS)
     m_activeProgram.transformationMatrix = transformation
 
+    //logger.debug(s"invoking gl.drawArrays(...)")
     gl.drawArrays(gl.const.TRIANGLES, 0, drawable.verticesCount)
 
-//    logger.debug(s"api_renderTrianglesArray(...) exit")
+    //logger.debug(s"END: api_renderTrianglesArray(...) exit")
   }
 
   private[gsg] def api_renderTrianglesIndexArray(drawable: TrianglesIndexedArray, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit ={
@@ -115,7 +125,9 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
   @inline
   private def impl_renderNode(node: Node, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
+    //logger.debug(s"BEGIN: render node ${node}")
     node.accept(impl_renderNodeVisitor, parentMergedStateSet, transformation)
+    //logger.debug(s"END: render node ${node}")
   }
 
   private var m_appliedStateSet = new StateSet()
@@ -171,13 +183,13 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
         //logger.debug(s"not re-applying attribute: ${l}")
         newApplied.variables_! += r
       } else {
-        logger.debug(s"applying uniform/attribute: ${l}")
+        //logger.debug(s"applying uniform/attribute: ${l}")
         l.apply(r)
         newApplied.variables_! += l
       }
     }
     def outLeft(l: ShaderVariableAttribute): Unit ={
-      logger.debug(s"applying uniform/attribute: ${l}")
+      //logger.debug(s"applying uniform/attribute: ${l}")
       l.apply(null)
       newApplied.variables_! += l
     }
@@ -198,18 +210,18 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
         //logger.debug(s"not re-applying attribute: ${l}")
         newApplied.m_attributes += r
       } else {
-        logger.debug(s"applying attribute: ${l}")
+        //logger.debug(s"applying attribute: ${l}")
         l.accept(applyVisitor)
         newApplied.m_attributes += l
       }
     }
     def outLeft(l: StateAttribute): Unit ={
-      logger.debug(s"applying attribute: ${l}")
+      //logger.debug(s"applying attribute: ${l}")
       l.accept(applyVisitor)
       newApplied.m_attributes += l
     }
     def outRight(r: StateAttribute): Unit ={
-      logger.debug(s"unapplying attribute: ${r}")
+      //logger.debug(s"unapplying attribute: ${r}")
       r.accept(unapplyVisitor)
     }
 
@@ -218,7 +230,9 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
 
   private val m_identity =  Matrix4F.identity()
   def render(node: Node): Unit ={
+    //logger.debug("BEGIN: render(...)")
     impl_renderNode(node, null, null)
+    //logger.debug("END: render(...)")
   }
 
 

@@ -74,23 +74,31 @@ object Matrix4F extends Matrix4FGenOps {
       m30, m31, m32, m33)
   }
 
-  @inline def identity() = this.apply(
+  def identity() = this.apply(
     1,  0,  0,  0,
     0,  1,  0,  0,
     0,  0,  1,  0,
     0,  0,  0,  1
   )
 
-  @inline def zero() = this.apply(
+  def zero() = this.apply(
     0,  0,  0,  0,
     0,  0,  0,  0,
     0,  0,  0,  0,
     0,  0,  0,  0
   )
 
+  def translation(x: Float = 0f, y: Float = 0f, z: Float = 0f) = this.apply(
+    1,  0,  0,  x,
+    0,  1,  0,  y,
+    0,  0,  1,  z,
+    0,  0,  0,  1
+  )
+
   //
   // Generate right handed default opengl ortho projection matrix
   // Note: NDC are left handed
+  // n and f are distances
   //
   final def ortho(l: Float, r: Float, b: Float, t: Float, n: Float, f: Float)= Matrix4F(
     2/(r-l),  0,         0,     -(r+l)/(r-l),

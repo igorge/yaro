@@ -109,7 +109,7 @@ object app extends JSApp with LazyLogging {
     with gie.gl.SML_Matrix4FRich
     with LazyLogging {
 
-    //@inline override def optCheckGlError(): Unit = { /*noop*/ }
+    @inline override def optCheckGlError(): Unit = { /*noop*/ }
   }
 
   type Renderer = gsg.Renderer[OpenGLContext]
@@ -231,7 +231,8 @@ object app extends JSApp with LazyLogging {
         val program = p.program
 
         def applied() {
-          projectionMatrix = gie.sml.Matrix4F.ortho(-1, 1, 1, -1, 1, 0)
+          val s = 50
+          projectionMatrix = gie.sml.Matrix4F.ortho(-s, s, -s, s, 1, 100)
           renderer.gl.uniform(u_texture) = 1 //DEBUG
         }
 
@@ -261,7 +262,7 @@ object app extends JSApp with LazyLogging {
 
         val tex1 = await(loadTex("내부소품/tor_boom.bmp", 255)) //createSolidTexture(-1,0,0,-1)
 
-        await(roServices.rsmLoader.load("글래지하수로/하수구_라이온1.rsm"))
+        val rsmNode = await(roServices.rsmLoader.load("외부소품/알데바란카프라본사.rsm"))
 
 
 
@@ -282,8 +283,15 @@ object app extends JSApp with LazyLogging {
         var delta:Double = 0
 
         val rootGroup = renderer.transformation {
-          angle+=(delta*1).toFloat
-          Matrix4F.rotZ(angle)
+          //angle+=(delta*1).toFloat
+
+          Matrix4F.translation(z = -50f)//*Matrix4F.rotZ(angle)
+
+          //Matrix4F.translation(x = -1f) //*Matrix4F.rotZ(angle)
+
+          //Matrix4F.identity()*
+
+          //Matrix4F.identity()
         }
 
         val node = new renderer.OwnerDraw(self=>{
@@ -319,7 +327,11 @@ object app extends JSApp with LazyLogging {
           n
         }
 
-        rootGroup.children += new renderer.Geode(squareNodeIndex)
+
+        rsmNode.addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+        //rootGroup += new renderer.Geode(squareNodeIndex)
+        //rootGroup += new renderer.Geode(squareNode)
+        rootGroup += rsmNode
         rootGroup.addAttribute( attr_program )
 
         def tick(oldTime: Long)(t:Double): Unit =try {

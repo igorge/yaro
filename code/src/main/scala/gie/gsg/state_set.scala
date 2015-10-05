@@ -2,6 +2,7 @@ package gie.gsg
 
 import gie.gsg.state_attribute.{GlProgramAttributeComponent, ShaderVariableComponent, UniformValueAttributeComponent, StateAttributeComponent}
 import gie.search.binarySearch
+import slogging.LoggerHolder
 
 import scala.collection.Searching.{SearchResult, Found, InsertionPoint}
 import scala.collection.generic
@@ -9,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.math.Ordering
 
 trait StateSetComponent {
-  this: ShaderVariableComponent with StateAttributeComponent with UniformValueAttributeComponent with GlProgramAttributeComponent with ProgramHolderComponent =>
+  this: ShaderVariableComponent with StateAttributeComponent with UniformValueAttributeComponent with GlProgramAttributeComponent with ProgramHolderComponent with LoggerHolder =>
 
   object StateSet {
     @inline
@@ -103,15 +104,22 @@ trait StateSetComponent {
     }
 
     def mergeCopyWithParent(ss: StateSet): StateSet = { //this overrides ss
+
+      //logger.debug(s"mergeCopyWithParent(${ss})")
+
       val newSS = new StateSet()
 
+      //logger.debug(s"mergeCopyWithParent_attrs")
       impl_mergeCopyWithParent_attributes(newSS, ss)
+      //logger.debug(s"mergeCopyWithParent_uniforms")
       impl_mergeCopyWithParent_uniforms(newSS, ss)
 
       newSS
     }
 
     private def impl_mergeCopyWithParent_uniforms(newSS: StateSet, parentSS: StateSet): Unit={
+
+      //logger.debug(s"impl_mergeCopyWithParent_uniforms")
 
       if(m_variables eq null){
         if(parentSS.m_variables eq null){
@@ -123,7 +131,8 @@ trait StateSetComponent {
         if(parentSS.m_variables eq null) {
           newSS.variables_! ++= m_variables
         } else {
-          gie.sorted_merge.merge(this.m_variables, parentSS.m_variables, newSS.m_variables){ ShaderVariableAttribute.orderingCmp }{ (l,r)=>l }
+          //logger.debug(s"impl_mergeCopyWithParent_uniforms: merging ${this.m_variables} with parent ${parentSS.m_variables}")
+          gie.sorted_merge.merge(this.m_variables, parentSS.m_variables, newSS.variables_!){ ShaderVariableAttribute.orderingCmp }{ (l,r)=>l }
         }
       }
 

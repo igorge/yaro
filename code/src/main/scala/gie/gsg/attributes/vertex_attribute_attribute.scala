@@ -43,7 +43,7 @@ trait VertexAttributeAttributeComponent {
 
         (vertexAttr eq yTyped.vertexAttr) &&
           (buffer == yTyped.buffer) &&
-          (bufferTarget == yTyped.bufferTarget)
+          (bufferTarget == yTyped.bufferTarget) &&
           (componentSize == yTyped.componentSize) &&
           (componentType == yTyped.componentType) &&
           (stride == yTyped.stride) &&

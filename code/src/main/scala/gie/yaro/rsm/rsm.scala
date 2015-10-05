@@ -38,6 +38,9 @@ case class RotationalKeyFrame(frame: Int, rot:Quaternion)
 case class Vector3I(x: Int, y: Int, z:Int){
   def toArray:Array[Int] = Array(x,y,z)
 }
+case class Vector3F(x: Float, y: Float, z:Float){
+  def toArray:Array[Float] = Array(x,y,z)
+}
 case class Quaternion(qx: Float, qy: Float,qz: Float, qw: Float)
 
 case class TexColor(color: Int, u: Float, v: Float)
@@ -57,7 +60,7 @@ case class Node( name: String,
                  rotAngle: Float,
                  rotAxis:Vector[Float],
                  scale: Vector[Float],
-                 vertices: Vector[(Float, Float, Float)],
+                 vertices: Vector[Vector3F],
                  texCoords: Vector[TexColor],
                  faces: Vector[Face],
                  rotationalAnimation: Vector[RotationalKeyFrame] )
@@ -151,7 +154,7 @@ object codec extends Codec[RsmFileData] with LazyLogging {
     ("rot_angle" | floatL ) :: // angle of rotation around the axis in radians
     ("rot_axis" | fixedVectorCodec(3, floatL) )  ::
     ("scale" | fixedVectorCodec(3, floatL) ) ::
-    ("vertices" | vectorOfN( int32L.withContext("num_of_vertices"), (floatL :: floatL :: floatL).as[(Float, Float, Float)])) ::
+    ("vertices" | vectorOfN( int32L.withContext("num_of_vertices"), (floatL :: floatL :: floatL).as[Vector3F])) ::
     ("texture_coordinates" | vectorOfN( int32L.withContext("num_of_tex_coords"), texColor)) ::
     ("faces" | vectorOfN( int32L.withContext("num_of_faces"), face)) ::
       /*:: positional animation if version >=1.5*/

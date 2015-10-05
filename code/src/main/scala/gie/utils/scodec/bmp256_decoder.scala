@@ -113,7 +113,7 @@ package scodec {
           }.toInt
 
           val scanlineCodec = "scanline" | fixedVectorCodec[Byte](imageHeader.width.toInt,  uint8.xmap(_.toByte, ub2i)) <~ fixedVectorCodec(padding, uint8).unit(Vector.fill(padding)(0))
-          val imageCodec = "image-data" | fixedVectorCodec(imageHeader.height.toInt, scanlineCodec)
+          val imageCodec = "image-data" | fixedVectorCodec(imageHeader.height.toInt, scanlineCodec) map (_.reverse)
 
           imageCodec.decode(contBits).require
         }
