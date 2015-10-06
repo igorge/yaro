@@ -69,7 +69,7 @@ trait RsmLoaderComponent { this: RendererContextComponent with TextureManagerCom
         def addVertex(vertexIdx: Int, texVertexIdx: Int): Unit ={
           val newBaseIdx = vertices.size / 3
           vertices ++= node.vertices( vertexIdx ).toArray
-          textureUVs ++= node.texCoords( texVertexIdx ) |> (uv=>Array(uv.u, -1f * uv.v))
+          textureUVs ++= node.texCoords( texVertexIdx ) map (uv=>Array(uv.u, -1f * uv.v))
         }
 
         node.faces.view.filter( _.textureId == texId ).foreach{face=>
