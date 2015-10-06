@@ -39,9 +39,20 @@ trait Constants {
   val TEXTURE_MIN_FILTER: Int
   val NEAREST: Int
   val BLEND: Int
+  val DEPTH_TEST: Int
+  val CULL_FACE: Int
   val ONE: Int
   val SRC_ALPHA: Int
   val ONE_MINUS_SRC_ALPHA: Int
+
+  val NEVER: Int
+  val LESS: Int
+  val EQUAL: Int
+  val LEQUAL: Int
+  val GREATER: Int
+  val NOTEQUAL: Int
+  val GEQUAL: Int
+  val ALWAYS: Int
 }
 
 trait Context {
@@ -135,6 +146,7 @@ trait Context {
   def impl_glEnable(cap: Int): Unit
   def impl_glDisable(cap: Int): Unit
   def impl_glBlendFunc(sfactor: Int, dfactor: Int): Unit
+  def impl_glDepthFunc(func: Int): Unit
   def impl_glGetIntegerv(pname: Int): Int
   def impl_glCreateShader(shaderType: Int): GLShader
   def impl_glDeleteShader(shader: GLShader): Unit
@@ -215,6 +227,12 @@ trait Context {
     impl_glBlendFunc(sfactor, dfactor)
     optCheckGlError()
   }
+
+  @inline final def depthFunc(func: Int): Unit={
+    impl_glDepthFunc(func)
+    optCheckGlError()
+  }
+
 
   @inline final def getInteger(pname: Int): Int = {
     val r = impl_glGetIntegerv(pname)

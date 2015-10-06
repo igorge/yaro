@@ -12,8 +12,8 @@ trait WithStateSetComponent {
       stateSet_!.addAttribute(attr)
       this
     }
-    def addUniformValue(uniform: UniformValueAttribute): this.type={
-      stateSet_!.addVariableValue(uniform)
+    def addUniformValue(name: String, v: Int): this.type={
+      stateSet_!.addVariableValue(new ConstIntUniformValueAttribute(name, v) )
       this
     }
     def addVertexAttributeValue(attr: VertexAttributeAttribute): this.type={

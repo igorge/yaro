@@ -40,6 +40,16 @@ object TextureDataLoader {
           buffer(targetIdx + 3) = -1
         }
 
+        //XXX: HACK: alpha
+        if( (ByteOps.ub2i(buffer(targetIdx + 0)) == 255) &&
+            (ByteOps.ub2i(buffer(targetIdx + 1)) == 0) &&
+            (ByteOps.ub2i(buffer(targetIdx + 2)) == 255) )
+        {
+          buffer(targetIdx + 3) = 0
+        }
+
+        //XXX: HACK
+
         targetIdx+=4
       }
 
@@ -67,7 +77,7 @@ trait TextureManagerComponent { this: RendererContextComponent with RoStoreCompo
     private val m_cache = new Cached[String, Future[CachedTextureData]]()
 
     private def impl_loadTexture(key: String, alpha: Int): Future[CachedTextureData] ={
-      logger.debug(s"Texture cache miss: ${key}")
+      logger.debug(s"Texture cache miss: ${key}, alpha: ${alpha}")
 
       load(urlResolver(key), alpha) map {
         case (w,h, data) => CachedTextureData(w, h, alpha, data)

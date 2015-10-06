@@ -234,6 +234,7 @@ object app extends JSApp with LazyLogging {
           val s = 50
           projectionMatrix = gie.sml.Matrix4F.ortho(-s, s, -s, s, 1, 100)
           renderer.gl.uniform(u_texture) = 1 //DEBUG
+          gl.enable(gl.const.DEPTH_TEST)
         }
 
       }
@@ -283,15 +284,9 @@ object app extends JSApp with LazyLogging {
         var delta:Double = 0
 
         val rootGroup = renderer.transformation {
-          //angle+=(delta*1).toFloat
+          angle+=(delta*1).toFloat
 
-          Matrix4F.translation(z = -50f)//*Matrix4F.rotZ(angle)
-
-          //Matrix4F.translation(x = -1f) //*Matrix4F.rotZ(angle)
-
-          //Matrix4F.identity()*
-
-          //Matrix4F.identity()
+          Matrix4F.translation(z = -50f)*Matrix4F.rotX(-1.0f)*Matrix4F.rotZ(angle)
         }
 
         val node = new renderer.OwnerDraw(self=>{
@@ -305,12 +300,12 @@ object app extends JSApp with LazyLogging {
         val squareNode= new renderer.TrianglesArray( renderer.staticArrayBuffer(geom._1), Some(renderer.staticArrayBuffer(geom._2)))
         squareNode
           .addAttribute(new renderer.Texture2D(tex1,0))
-          .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+          .addUniformValue(programHolder.u_texture.name, 0)
 
 
                 node
                   .addAttribute(new renderer.Texture2D(tex1,0))
-                  .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+                  .addUniformValue(programHolder.u_texture.name, 0)
                   .addAttribute( new renderer.IndexBufferAttribute(gl.createBuffer(gl.const.ELEMENT_ARRAY_BUFFER, gl.AsUnsignedShort(indexedBox._1), gl.const.STATIC_DRAW)))
                   .addVertexAttributeValue( attributesNames.a_position, 3, gl.const.FLOAT){ gl.createBuffer(gl.const.ARRAY_BUFFER, indexedBox._2, gl.const.STATIC_DRAW) }
                   .addVertexAttributeValue( attributesNames.a_tex_coordinate,  2, gl.const.FLOAT ){gl.createBuffer(gl.const.ARRAY_BUFFER, indexedBox._3, gl.const.STATIC_DRAW)}
@@ -323,12 +318,12 @@ object app extends JSApp with LazyLogging {
         val squareNodeIndex= {
           val n = new renderer.TrianglesIndexedArray( renderer.staticElementArrayBuffer( renderer.gl.AsUnsignedShort(indexedBox._1) ), renderer.staticArrayBuffer(indexedBox._2), Some(renderer.staticArrayBuffer(indexedBox._3)))
           n.addAttribute(new renderer.Texture2D(tex1,0))
-           .addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+           .addUniformValue(programHolder.u_texture.name, 0)
           n
         }
 
 
-        rsmNode.addUniformValue(programHolder.constUniformValue(programHolder.u_texture)(0))
+        rsmNode.addUniformValue(programHolder.u_texture.name, 0)
         //rootGroup += new renderer.Geode(squareNodeIndex)
         //rootGroup += new renderer.Geode(squareNode)
         rootGroup += rsmNode

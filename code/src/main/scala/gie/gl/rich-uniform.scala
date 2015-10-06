@@ -9,6 +9,7 @@ trait RichUniformTrait { this: Context =>
     val name: String
     @inline final def get = location
     @inline final def apply() = location
+    @inline def isDefined = get != uniformLocation_null
   }
 
   class Uniform(val name: String) extends UniformTrait {

@@ -21,12 +21,18 @@ trait StateSetComponent {
         xSS.getProgram(ySS)
       }
     }
+
+    def getProgramFrom(ss: StateSet): GlProgramHolder={
+      if (ss eq null) null else ss.getProgram()
+    }
   }
 
   // Growable += simply appends at the end of array buffer with ordering enforcement
   // use insert() for set-like element insertion
   //
   class StateSet {
+    private val m_parent: StateSet = null // not used or assigned for now
+
     private[gsg] val m_attributes = new ArrayBuffer[StateAttribute]()
     private var m_variables:ArrayBuffer[ShaderVariableAttribute] = null
 
@@ -43,7 +49,9 @@ trait StateSetComponent {
 
     @inline
     def getProgram(): GlProgramHolder ={
-      if(m_attributes.size==0 || m_attributes(0).index!=GlProgramAttribute.index ) null else {
+      if(m_attributes.size==0 || m_attributes(0).index!=GlProgramAttribute.index) {
+        StateSet.getProgramFrom(m_parent)
+      } else {
         m_attributes(0).asInstanceOf[GlProgramAttribute].programHolder
       }
     }

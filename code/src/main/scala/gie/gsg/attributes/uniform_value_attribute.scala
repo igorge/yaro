@@ -7,18 +7,14 @@ trait UniformValueAttributeComponent {
   this: RenderContext with ProgramHolderComponent with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent =>
 
   trait UniformValueAttribute extends ShaderVariableAttribute {
-    val uniformLocation: gl.UniformTrait
-    val uniformProgram: GlProgramHolder
-
-    @inline final def name:String = uniformLocation.name
-    @inline final def location:gl.GLUniformLocation = uniformLocation.location
+    final lazy val uniformLocation = program.resolveUniform(new gl.Uniform(name))
 
     def apply(from: ShaderVariableAttribute): Unit
     def unapply(): Unit={/* do nothing*/}
 
   }
 
-  abstract class ConstUniformValueAttribute[T](val uniformProgram: GlProgramHolder, val uniformLocation: gl.UniformTrait, v: => T) extends UniformValueAttribute {
+  abstract class ConstUniformValueAttribute[T](val name: String, v: => T) extends UniformValueAttribute {
     protected lazy val m_value = v
 
     def ===(y: ShaderVariableAttribute): Boolean = {
@@ -28,14 +24,22 @@ trait UniformValueAttributeComponent {
         false
       } else {
         val yTyped = y.asInstanceOf[ConstUniformValueAttribute[_]]
-        uniformProgram == yTyped.uniformProgram && m_value == yTyped.m_value
+        program == yTyped.program && m_value == yTyped.m_value
       }
     }
 
-//    def apply(from: ShaderVariableAttribute): Unit
+//    def apply(from: ShaderVariableAttribute): Unit ={
+//      gl.uniform(uniformLocation) = m_value
+//    }
 
     override def toString() = s"ConstUniformValueAttribute(${uniformLocation.name} @ ${uniformLocation.location}, ${m_value})"
+  }
 
+
+  class ConstIntUniformValueAttribute(name: String, v: Int) extends ConstUniformValueAttribute[Int](name, v){
+    def apply(from: ShaderVariableAttribute): Unit ={
+      gl.uniform(uniformLocation) = m_value
+    }
   }
 
 

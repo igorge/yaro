@@ -12,8 +12,8 @@ trait RenderContext {
   type GLT <: Context with ContextUnbind with RichContext
   val gl: GLT
 
-  protected var m_activeProgram: GlProgramHolder = null
-  @inline def program = m_activeProgram
+  protected var rendererActiveProgram: GlProgramHolder = null
+  @inline def program = rendererActiveProgram
 
 }
 
@@ -80,7 +80,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
     //logger.debug(s"api_renderTrianglesArray: impl_applyStateSet(...)")
     impl_applyStateSet(selfSS)
-    m_activeProgram.transformationMatrix = transformation
+    rendererActiveProgram.transformationMatrix = transformation
 
     //logger.debug(s"invoking gl.drawArrays(...)")
     gl.drawArrays(gl.const.TRIANGLES, 0, drawable.verticesCount)
@@ -92,7 +92,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     //  logger.debug(s"api_renderTrianglesArray(..., ${parentMergedStateSet}, ...)")
     val selfSS = impl_genSelfStateSet(drawable.stateSet, parentMergedStateSet)
     impl_applyStateSet(selfSS)
-    m_activeProgram.transformationMatrix = transformation
+    rendererActiveProgram.transformationMatrix = transformation
 
     gl.drawElements(gl.const.TRIANGLES, drawable.verticesCount, gl.const.UNSIGNED_SHORT, 0)
   }
@@ -118,7 +118,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     def visit(n: OwnerDraw, parentMergedStateSet: StateSet, transformation: MatrixRead4F): Unit={
       val selfSS = impl_genSelfStateSet(n.stateSet, parentMergedStateSet)
       impl_applyStateSet(selfSS)
-      m_activeProgram.transformationMatrix = transformation
+      rendererActiveProgram.transformationMatrix = transformation
       n.f(n)
     }
   }
@@ -136,7 +136,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
     def visit(attr: GlProgramAttribute): Unit={
       gl.useProgram(attr.m_program)
       attr.applied()
-      m_activeProgram = attr.programHolder
+      rendererActiveProgram = attr.programHolder
     }
     def visit(attr: Texture2D): Unit ={
       gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)
@@ -150,7 +150,7 @@ class Renderer[GLType <: Context with ContextUnbind with RichContext](val gl: GL
   private object unapplyVisitor extends StateAttributeVisitor {
     def visit(attr: GlProgramAttribute): Unit={
       gl.useNullProgram()
-      m_activeProgram = null
+      rendererActiveProgram = null
     }
     def visit(attr: Texture2D): Unit ={
       gl.activateTexture(gl.const.TEXTURE0 + attr.m_textureUnit)

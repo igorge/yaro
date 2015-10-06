@@ -45,9 +45,20 @@ object WebGLContext extends Constants {
   final val TEXTURE_MIN_FILTER: Int = dom.raw.WebGLRenderingContext.TEXTURE_MIN_FILTER
   final val NEAREST: Int = dom.raw.WebGLRenderingContext.NEAREST
   final val BLEND: Int = dom.raw.WebGLRenderingContext.BLEND
+  final val DEPTH_TEST: Int = dom.raw.WebGLRenderingContext.DEPTH_TEST
+  final val CULL_FACE: Int = dom.raw.WebGLRenderingContext.CULL_FACE
   final val ONE: Int = dom.raw.WebGLRenderingContext.ONE
   final val SRC_ALPHA: Int = dom.raw.WebGLRenderingContext.SRC_ALPHA
   final val ONE_MINUS_SRC_ALPHA: Int = dom.raw.WebGLRenderingContext.ONE_MINUS_SRC_ALPHA
+
+  final val NEVER: Int = dom.raw.WebGLRenderingContext.NEVER
+  final val LESS: Int = dom.raw.WebGLRenderingContext.LESS
+  final val EQUAL: Int = dom.raw.WebGLRenderingContext.EQUAL
+  final val LEQUAL: Int = dom.raw.WebGLRenderingContext.LEQUAL
+  final val GREATER: Int = dom.raw.WebGLRenderingContext.GREATER
+  final val NOTEQUAL: Int = dom.raw.WebGLRenderingContext.NOTEQUAL
+  final val GEQUAL: Int = dom.raw.WebGLRenderingContext.GEQUAL
+  final val ALWAYS: Int = dom.raw.WebGLRenderingContext.ALWAYS
 
 }
 
@@ -89,24 +100,35 @@ class WebGLContext(val real: dom.raw.WebGLRenderingContext) extends Context {
   @inline final def impl_glClear(mask: Int): Unit = {
     real.clear(mask)
   }
+
   @inline final def impl_glClearColor(red: Float, green: Float, blue: Float, alpha: Float): Unit = {
     real.clearColor(red, green, blue, alpha)
   }
+
   @inline final def  impl_glViewport(x: Int, y: Int, width: Int, height: Int): Unit ={
     real.viewport(x, y, width, height)
   }
+
   @inline final def impl_glEnable(cap: Int): Unit ={
     real.enable(cap)
   }
+
   @inline final def impl_glDisable(cap: Int): Unit ={
     real.disable(cap)
   }
+
   @inline final def impl_glBlendFunc(sfactor: Int, dfactor: Int): Unit ={
     real.blendFunc(sfactor, dfactor)
   }
+
+  @inline final def impl_glDepthFunc(func: Int): Unit={
+    real.depthFunc(func)
+  }
+
   @inline final def impl_glGetIntegerv(pname: Int): Int ={
     real.getParameter(pname).asInstanceOf[Int]
   }
+
   @inline final def impl_glCreateShader(shaderType: Int): GLShader ={
     real.createShader( shaderType )
   }

@@ -16,22 +16,17 @@ trait ProgramHolderComponent {
     def projectionMatrix_=(m:MatrixRead4F): m.type
 
     def resolveAttribute(attribute: gl.VertexAttributeApiTrait): attribute.type
+    def resolveUniform(uniform: gl.UniformTrait): uniform.type = {
+      if(uniform.isDefined) throw new Exception(s"uniform '${uniform.name}' is already defined")
+      uniform.location = gl.getUniformLocation(program, uniform.name)
+      uniform
+    }
 
     def transformationMatrix: MatrixRead4F = ???
     def transformationMatrix_=(m:MatrixRead4F): m.type
     def vertexCoordinatesAttribute: gl.VertexAttribute
     def vertexTextureCoordinatesAttribute: gl.VertexAttribute
     def vertexColorAttribute: gl.VertexAttribute
-
-    @inline def constUniformValue(ul: gl.UniformTrait)(v: Int): ConstUniformValueAttribute[Int] ={
-      new ConstUniformValueAttribute[Int](programHolder, ul, v){
-        def apply(from: ShaderVariableAttribute): Unit ={
-          gl.uniform(uniformLocation) = m_value
-        }
-      }
-    }
-
-
   }
 
 

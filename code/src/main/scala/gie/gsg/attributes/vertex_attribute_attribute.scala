@@ -6,16 +6,11 @@ import gie.gsg.{ProgramHolderComponent, RenderContext}
 trait VertexAttributeAttributeComponent {
   this: RenderContext with ProgramHolderComponent with StateAttributeComponent with GlProgramAttributeComponent with ShaderVariableComponent  =>
 
-  class VertexAttributeAttribute(vertexAttName: String, val buffer: gl.GLBuffer, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
+  class VertexAttributeAttribute(val name: String, val buffer: gl.GLBuffer, val componentSize: Int, val componentType: Int, val stride: Int, val offset: Int) extends ShaderVariableAttribute {
 
     val bufferTarget: Int = gl.const.ARRAY_BUFFER
 
-    lazy val vertexAttr = {
-      val r = new gl.VertexAttribute(vertexAttName)
-      m_activeProgram.resolveAttribute(r)
-      r
-    }
-    def name = vertexAttName
+    lazy val vertexAttr = program.resolveAttribute(new gl.VertexAttribute(name))
 
     def apply(from: ShaderVariableAttribute): Unit={
       if(from eq null) {
@@ -47,7 +42,8 @@ trait VertexAttributeAttributeComponent {
           (componentSize == yTyped.componentSize) &&
           (componentType == yTyped.componentType) &&
           (stride == yTyped.stride) &&
-          (offset == yTyped.stride)
+          (offset == yTyped.stride) &&
+          (program == yTyped.program)
       }
     }
 
