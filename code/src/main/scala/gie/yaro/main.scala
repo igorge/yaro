@@ -271,11 +271,8 @@ object app extends JSApp with LazyLogging {
         gl.clearColor(0,0,0,1f)
 
 
-        //program.use()//renderProg.apply()
-
         gl.enable(gl.const.BLEND)
         gl.blendFunc(gl.const.SRC_ALPHA, gl.const.ONE_MINUS_SRC_ALPHA)
-
 
         gl.bindNullBuffer(gl.const.ARRAY_BUFFER)
 
